@@ -1,0 +1,7 @@
+{
+  "name": "post-commit-hook",
+  "description": "Auto-run OpenClaw agents after git commit for review.",
+  "event": "post-commit",
+  "command": "node tools/openclaw-engine/openclaw.mjs agent @Architect review-code && node tools/openclaw-engine/openclaw.mjs agent @Tester simulate-scenarios",
+  "approvalRequired": false
+}

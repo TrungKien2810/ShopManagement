@@ -1,0 +1,10 @@
+[DIAGNOSTIC 4/7/2026 8:56:24 PM]
+UserId from Token: kingqn132
+User exists in DB: False
+Total users in DB: 2
+========================================
+[DIAGNOSTIC 4/7/2026 8:58:37 PM]
+UserId from Token: 62151249-fe93-4af6-9beb-2a8b36d62251
+User exists in DB: True
+Total users in DB: 2
+========================================

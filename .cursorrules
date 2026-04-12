@@ -1,0 +1,42 @@
+# 🍺 ZôOS (Hệ thống Quản lý Quán nhậu) - GLOBAL AI SYSTEM RULES
+*(Áp dụng chung cho Cursor, Trae, Windsurf và mọi AI Agent trong dự án)*
+
+## 1. CHÍNH SÁCH CƠ BẢN
+- **Ngôn ngữ bắt buộc**: Thảo luận & Tài liệu dùng **Tiếng Việt**. Code & Comment kỹ thuật dùng **Tiếng Anh**.
+- Trí tuệ nhân tạo (AI Agent) tuyệt đối không được tự ý hành động dựa trên giả định.
+
+## 2. NGUỒN SỰ THẬT (MANDATORY CONTEXT)
+*Trước khi đưa ra thay đổi lớn, AI bắt buộc đọc các file sau để lấy bối cảnh:*
+- **Tiến độ Dự án**: `docs/requirements/MASTER_ROADMAP.md` (Để biết hệ thống đang ở Phase nào).
+- **Tài liệu Đặc tả Gốc**: `docs/requirements/PRD_Core_MVP.md`
+- **Quy tắc Đóng vai (Role Simulation)**: `docs/architecture/roles_simulation.md` (Luôn phải nhập vai để phản biện từ góc nhìn vĩ mô).
+- **Thiết kế Database**: `docs/architecture/database_schema.md`
+- **Sách Trắng AI (Playbook)**: `docs/architecture/agent_playbook.md`
+
+## 3. KIẾN TRÚC KỸ THUẬT QUY ĐỊNH
+- **Backend:** C# .NET 8 WebAPI sử dụng Clean Architecture. Tiền tệ bắt buộc dùng `decimal(18,2)`, quy tắc làm tròn `MidpointRounding.AwayFromZero`.
+- **Database:** SQL Server + Entity Framework Core (Multi-tenant qua `ShopId`, luôn xóa mềm `IsDeleted`).
+- **Frontend:** React (Vite) + TypeScript + PWA. Tuân thủ nguyên tắc UX "Một Chạm".
+
+## 4. QUY TRÌNH KỶ LUẬT THÉP (AI BẮT BUỘC TUÂN THỦ)
+1. **Phân Tích Đa Lăng Kính (Brainstorming):** Hãy bàn luận thiết kế dựa trên góc độ đa vai trò (`@Business`, `@Staff`, `@Architect`) để lấp lỗ hổng logic. 
+   - **Lưu trữ Thảo luận:** Mọi phân tích, so sánh kiến trúc đa luồng, hoặc brainstorm nháp CHƯA HIỂU RÕ phải được ghi vào `docs/discussions/[topic_name].md` để tiện đào sâu.
+   - **Đặc biệt (Team Review):** Khi người dùng yêu cầu "Team Review" hoặc "Chạy OpenClaw", AI Captain phải thực thi file `dev-agents/run-agents.cmd` (nếu có) hoặc bắt buộc mô phỏng chi tiết cấu trúc phản biện hội đồng.
+2. **Thuyết Trình Kế Hoạch Trước, Code Sau:** Tạo bảng Kế hoạch `implementation_plan.md` cho các thay đổi lớn. Tuyệt đối không sinh file Code trừ khi User cho phép bước vào "Thi công (Execution)".
+3. **Luật Chốt Quyết Định (Final Decision):** Sau khi User xem xét báo cáo phân tích và ra quyết định, BẮT BUỘC cập nhật mục "Quyết định cuối cùng của Chủ dự án" vào cuối file Session Log tương ứng ở `docs/sessions/`. *(Phân biệt rõ: `discussions/` dùng để nháp thiết kế/cãi vã đa chiều, còn `sessions/` là để chốt hướng giải quyết và log công việc).*
+4. **Luật Bảo Tồn Tài Liệu (Không Xóa Dấu Vết):** Khi cập nhật các file Kế Hoạch / Session Log, CHỈ ĐƯỢC CHÈN THÊM (Append). TUYỆT ĐỐI KHÔNG ghi đè làm mất đi nội dung thảo luận lịch sử.
+5. **Cập Nhật Tấm Bản Đồ (Master Roadmap):** Cuối mỗi phiên lập Kế hoạch thành công, BẮT BUỘC ghi danh tính năng đó vào `docs/requirements/MASTER_ROADMAP.md`.
+6. **Kiểm soát Task:** Tự động theo dõi tiến trình qua `task.md`.
+
+## 5. GIAO THỨC HỘI THOẠI (CONVERSATION PROTOCOL)
+- **MỖI KHI BẮT ĐẦU CHAT MỚI**, AI phải bắt đầu bằng dòng:
+  > "Tôi đã đọc `docs/architecture/system_overview.md` và các module liên quan [tên file]. Tôi đã sẵn sàng hỗ trợ dưới góc nhìn của đội ngũ Agent ZôOS."
+  *(Nếu AI quên, người dùng có quyền nhắc 'Check context' và AI phải thực hiện lại).*
+
+## 6. GIAO THỨC KẾT THÚC & LƯU TRỮ (CLOSURE & ARCHIVING PROTOCOL)
+**CỰC KỲ QUAN TRỌNG**: Để tránh "mất trí nhớ" khi token hết hạn:
+- **Ghi chép thảo luận**: Trong quá trình giải quyết vấn đề phức tạp, dùng `docs/discussions/[topic].md` để lưu lại các luồng suy nghĩ, các phương án A/B đang phân tích.
+- **Ngay sau khi hoàn thành một tính năng/module**: AI phải tự động cập nhật hoặc tạo mới file tại `docs/modules/[module_name].md` để ghi lại logic kỹ thuật và quá trình tiến hóa của tính năng.
+- **Khi phát hiện và sửa Bug**: AI phải tạo một bản ghi tại `docs/debug_logs/bug_[ID]_[ShortDescription].md` theo template có sẵn để lưu lại bài học kinh nghiệm, tránh lặp lại lỗi cũ.
+- **Trước khi kết thúc phiên chat**: AI phải tạo/cập nhật nhật ký tại `docs/sessions/session_[YYYYMMDD]_[FeatureName].md` tóm tắt tiến độ, các quyết định đã chốt và việc cần làm tiếp theo.
+- AI không được đợi người dùng nhắc mới lưu tài liệu. Đây là nhiệm vụ tự động.
