@@ -121,6 +121,25 @@ public class ShopController : ControllerBase
         return Ok(new { Message = $"Đã mời {request.Username} vào quán!" });
     }
 
+    [HttpGet("{shopId}/members")]
+    public async Task<IActionResult> GetMembers(Guid shopId)
+    {
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var isAuthorized = await _context.ShopMembers.AnyAsync(m => m.ShopId == shopId && m.UserId == currentUserId);
+        if (!isAuthorized) return Forbid();
+
+        var members = await _context.ShopMembers
+            .Where(m => m.ShopId == shopId)
+            // JOIN với bảng Users để lấy tên (do UserManager khó Map thẳng trong LINQ)
+            .Join(_context.Users, 
+                  m => m.UserId, 
+                  u => u.Id, 
+                  (m, u) => new { Username = u.UserName, Role = m.Role, JoinedAt = m.JoinedAt })
+            .ToListAsync();
+
+        return Ok(members);
+    }
+
     [HttpGet("my-shops")]
     public async Task<IActionResult> GetMyShops()
     {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { shopApi } from '../api/shopApi';
 
@@ -6,8 +7,7 @@ export const ShopCreationPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    phoneNumber: '',
-    description: ''
+    phoneNumber: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +21,7 @@ export const ShopCreationPage: React.FC = () => {
       await shopApi.create({
         name: formData.name,
         address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        description: formData.description
+        phoneNumber: formData.phoneNumber
       });
       alert('Tạo quán thành công!');
       navigate('/shops');
@@ -33,82 +32,74 @@ export const ShopCreationPage: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 p-6 md:p-12 selection:bg-orange-500/30">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30 overflow-hidden relative">
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-purple/5 blur-[120px] rounded-full" />
+      
+      <div className="max-w-xl mx-auto pt-20 px-6 relative z-10">
         <button 
           onClick={() => navigate('/shops')}
-          className="mb-8 text-slate-500 hover:text-slate-300 font-bold uppercase tracking-widest text-xs flex items-center gap-2 transition-colors"
+          className="mb-12 text-brand-gray hover:text-white font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 transition-colors transition-all"
         >
-          ← Quay lại danh sách
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          Quay lại danh sách
         </button>
 
-        <div className="bg-slate-800/40 p-10 md:p-16 rounded-[40px] shadow-2xl border border-slate-700/50 backdrop-blur-xl animate-fadeIn">
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent mb-4">
-              Tạo Quán Mới
-            </h1>
-            <p className="text-slate-400 font-medium">Bắt đầu hành trình kinh doanh thông minh cùng ZôOS</p>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="linear-surface p-12 shadow-2xl"
+        >
+          <div className="mb-10 text-center">
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Tạo Quán Mới</h1>
+            <p className="text-brand-gray text-[10px] font-bold uppercase tracking-[0.2em]">Khởi tạo không gian ZôOS mới của bạn</p>
           </div>
 
           {error && (
-            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-2xl mb-8 text-sm font-bold">
+            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-lg">
               ⚠️ {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-2">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Tên Quán <span className="text-rose-500">*</span></label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">Tên Quán</label>
               <input 
                 name="name"
                 type="text" 
-                className="w-full px-6 py-5 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700 text-lg font-bold"
-                placeholder="Ví dụ: Zô Zô Quán - Nướng & Lẩu"
+                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm font-semibold"
+                placeholder="Ví dụ: Zô Zô Quán"
                 value={formData.name}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Số điện thoại</label>
-                <input 
-                  name="phoneNumber"
-                  type="text" 
-                  className="w-full px-6 py-5 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700 font-bold"
-                  placeholder="090x xxx xxx"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Địa chỉ <span className="text-rose-500">*</span></label>
-                <input 
-                  name="address"
-                  type="text" 
-                  className="w-full px-6 py-5 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700 font-bold"
-                  placeholder="123 Đường Zô, Quận 1, TP.HCM"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">Địa chỉ</label>
+              <input 
+                name="address"
+                type="text" 
+                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm font-semibold"
+                placeholder="123 Đường ABC, Quận XYZ..."
+                value={formData.address}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Mô tả ngắn</label>
-              <textarea 
-                name="description"
-                rows={4}
-                className="w-full px-6 py-5 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700 font-medium resize-none"
-                placeholder="Quán chuyên các món nướng và bia tươi..."
-                value={formData.description}
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">Số điện thoại</label>
+              <input 
+                name="phoneNumber"
+                type="text" 
+                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm font-semibold"
+                placeholder="090x xxx xxx"
+                value={formData.phoneNumber}
                 onChange={handleChange}
               />
             </div>
@@ -116,12 +107,12 @@ export const ShopCreationPage: React.FC = () => {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full py-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-slate-700 disabled:to-slate-700 text-white font-black rounded-3xl shadow-2xl shadow-orange-900/40 transition-all transform active:scale-95 uppercase tracking-[0.2em] text-lg mt-4"
+              className="w-full btn-primary py-4 font-bold rounded-xl mt-6 uppercase tracking-widest text-xs"
             >
-              {loading ? 'Đang khởi tạo quán...' : 'Xác nhận tạo quán 🍻'}
+              {loading ? 'Đang khởi tạo...' : 'Xác nhận tạo quán'}
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

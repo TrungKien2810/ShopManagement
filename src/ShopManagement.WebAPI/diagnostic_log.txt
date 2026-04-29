@@ -8,3 +8,8 @@ UserId from Token: 62151249-fe93-4af6-9beb-2a8b36d62251
 User exists in DB: True
 Total users in DB: 2
 ========================================
+[DIAGNOSTIC 4/16/2026 8:26:25 PM]
+UserId from Token: a5b966eb-759d-43be-8fae-4a40a25f4da3
+User exists in DB: True
+Total users in DB: 2
+========================================

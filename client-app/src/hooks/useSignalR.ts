@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+// @ts-ignore
 import * as signalR from '@microsoft/signalr';
 
 export const useSignalR = (url: string, onConnected?: (connection: signalR.HubConnection) => void) => {

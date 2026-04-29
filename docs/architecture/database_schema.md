@@ -4,6 +4,15 @@ Dưới đây là thiết kế cơ sở dữ liệu dựa trên các yêu cầu 
 
 ---
 
+## 0. Schema Change Log (Append-only)
+
+Muc dich: Moi khi co EF Core migration thay doi schema, phai append 1 muc vao day de tranh "code co, docs khong co".
+
+Template:
+- YYYY-MM-DD - Migration `<MigrationName>`: (Tables/Columns) + ly do nghiep vu + module lien quan + link toi plan/session neu co.
+
+---
+
 ## 1. Góc nhìn từ @Architect
 
 **@Architect**: Để đáp ứng các yêu cầu phức tạp như phân quyền, gộp bàn, tách bill và quản lý kho, tôi thiết kế schema này với các nguyên tắc sau:

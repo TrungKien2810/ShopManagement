@@ -23,7 +23,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ShopManagement.Application\ShopManagement.Application.csproj" />
     <ProjectReference Include="..\ShopManagement.Infrastructure\ShopManagement.Infrastructure.csproj" />
-    <ProjectReference Include="..\ShopManagement.AI\ShopManagement.AI.csproj" />
   </ItemGroup>
 
 </Project>

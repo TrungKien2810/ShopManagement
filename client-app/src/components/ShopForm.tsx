@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CreateShopDto } from "../models/shop";
+import type { CreateShopDto } from "../models/shop";
 import { shopApi } from "../api/shopApi";
 
 interface ShopFormProps {

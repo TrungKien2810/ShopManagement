@@ -32,6 +32,11 @@
 - [ ] ⏳ **Multi-tenant Switcher:** Phím gạt chuyển Quán nhanh dành cho các Đại gia đa cơ sở.
 - [ ] ⏳ **Logic Freemium Quota:** Check-out quá 5 Staff ở tài khoản Free sẽ block.
 
+### 3. Vận hành Thực chiến (Operational Management)
+*Lịch sử ra quyết định: [Nhật ký lập kế hoạch](../sessions/session_20260419_OperationalManagement.md)*
+- [ ] ⏳ **Mời & Quản lý Nhân sự (Staff Invitations)**: Quản lý role staff/chef/manager.
+- [ ] ⏳ **Quản lý Không gian (Space Management)**: Tạo khu vực, sơ đồ bàn linh hoạt theo vùng.
+
 ---
 
 ## 🏗️ GIAI ĐOẠN 3: KẾ TOÁN & KIỂM KÊ (Backlog - Chưa Lên Kế Hoạch ⬛)

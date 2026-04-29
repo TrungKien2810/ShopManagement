@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 interface User {
   username: string;
@@ -24,15 +24,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [currentShop, setCurrentShop] = useState<Shop | null>(null);
-
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('zoos_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [currentShop, setCurrentShop] = useState<Shop | null>(() => {
     const savedShop = localStorage.getItem('zoos_shop');
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedShop) setCurrentShop(JSON.parse(savedShop));
-  }, []);
+    return savedShop ? JSON.parse(savedShop) : null;
+  });
 
   const login = (token: string, username: string, avatarUrl?: string) => {
     const newUser = { token, username, avatarUrl };

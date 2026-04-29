@@ -15,11 +15,21 @@ public class TenantService : ITenantService
 
     public Guid? GetTenantId()
     {
-        var tenantIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("ShopId")?.Value;
+        var context = _httpContextAccessor.HttpContext;
+        var tenantIdClaim = context?.User?.FindFirst("ShopId")?.Value;
         
         if (Guid.TryParse(tenantIdClaim, out var tenantId))
         {
             return tenantId;
+        }
+
+        // Fallback to HTTP Headers (Frontend passes ShopId in intercepted request)
+        if (context != null && context.Request.Headers.TryGetValue("ShopId", out var headerShopId))
+        {
+             if (Guid.TryParse(headerShopId.ToString(), out var headerTenantId))
+             {
+                 return headerTenantId;
+             }
         }
 
         return null;

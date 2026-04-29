@@ -1,162 +1,182 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Camera, Lock, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 export const EmergencySettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { user, updateUserAvatar } = useAuth();
   const [activeTab, setActiveTab] = useState<'avatar' | 'password'>('avatar');
   
-  // Avatar state
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
-  
-  // Password state
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(user?.avatarUrl || '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const handleUpdateAvatar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!avatarUrl.trim()) return;
-    
+    if (!avatarFile) return;
     setLoading(true);
     setMessage(null);
     try {
-      await apiClient.put('/api/auth/profile/avatar', { avatarUrl });
-      updateUserAvatar(avatarUrl);
-      setMessage({ text: 'Cập nhật Avatar thành công!', type: 'success' });
+      const formData = new FormData();
+      formData.append('File', avatarFile);
+      const response = await apiClient.put('/auth/profile/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const newAvatarUrl = response.data?.avatarUrl || previewUrl;
+      updateUserAvatar(newAvatarUrl);
+      setMessage({ text: 'Cập nhật ảnh thành công!', type: 'success' });
     } catch (err: any) {
-      setMessage({ text: err.response?.data?.message || 'Lỗi khi cập nhật Avatar', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
+      setMessage({ text: 'Lỗi khi tải ảnh lên Cloudinary', type: 'error' });
+    } finally { setLoading(false); }
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!oldPassword || !newPassword) return;
-    
     setLoading(true);
     setMessage(null);
     try {
-      await apiClient.put('/api/auth/profile/password', { oldPassword, newPassword });
-      setMessage({ text: 'Đổi mật khẩu thành công!', type: 'success' });
-      setOldPassword('');
-      setNewPassword('');
+      await apiClient.put('/auth/profile/password', { oldPassword, newPassword });
+      setMessage({ text: 'Đã thay đổi mật khẩu!', type: 'success' });
+      setOldPassword(''); setNewPassword('');
     } catch (err: any) {
-      setMessage({ text: err.response?.data?.message || 'Lỗi khi đổi mật khẩu', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
+      setMessage({ text: 'Sai mật khẩu hoặc lỗi hệ thống', type: 'error' });
+    } finally { setLoading(false); }
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/50 p-6 sm:p-8 rounded-[32px] shadow-2xl animate-bounceIn overflow-hidden">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-black text-white italic tracking-tighter uppercase">
-            Cài Đặt Khẩn Cấp ⚙️
-          </h2>
-          <button onClick={onClose} className="p-2 text-slate-500 hover:text-white bg-slate-800 hover:bg-rose-500/20 rounded-full transition-colors">
-            ✕
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 p-1 bg-slate-950/50 rounded-2xl">
-          <button
-            onClick={() => { setActiveTab('avatar'); setMessage(null); }}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'avatar' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-          >
-            Đổi Avatar
-          </button>
-          <button
-            onClick={() => { setActiveTab('password'); setMessage(null); }}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'password' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-          >
-            Đổi Mật Khẩu
-          </button>
-        </div>
-
-        {/* Message Alert */}
-        {message && (
-          <div className={`mb-4 p-4 rounded-2xl text-sm font-semibold flex items-center gap-2 ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-            <span>{message.type === 'success' ? '✅' : '⚠️'}</span> {message.text}
+  return createPortal(
+    <div className="fixed inset-0 z-[999] flex justify-center items-start md:items-center overflow-y-auto p-4 md:p-8">
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm" 
+        onClick={onClose} 
+      />
+      
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-[440px] linear-surface p-0 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden my-auto z-10"
+      >
+        {/* Header Section */}
+        <div className="px-8 pt-8 pb-6 border-b border-white/[0.05]">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              Cài đặt tài khoản
+            </h2>
+            <button onClick={onClose} className="p-1 px-1.5 text-brand-gray hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-md transition-all">
+               <X className="w-4 h-4" />
+            </button>
           </div>
-        )}
+          <p className="text-xs text-brand-gray font-medium">Quản lý định danh và bảo mật cho ZôOS</p>
+        </div>
 
-        {/* Content */}
-        {activeTab === 'avatar' ? (
-          <form onSubmit={handleUpdateAvatar} className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-                URL Ảnh đại diện
-              </label>
-              <input
-                type="url"
-                className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-orange-500/50 outline-none transition-all text-slate-200 placeholder:text-slate-700"
-                placeholder="https://example.com/avatar.jpg"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                required
-              />
-            </div>
-            {/* Preview */}
-            {avatarUrl && (
-              <div className="flex justify-center my-4">
-                <img src={avatarUrl} alt="Preview" className="w-20 h-20 rounded-full object-cover border-4 border-slate-800" onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Error&background=random'; }} />
-              </div>
+        {/* Tab Navigation */}
+        <div className="px-8 py-4 flex gap-6 border-b border-white/[0.05] bg-black/20">
+          <button 
+            onClick={() => setActiveTab('avatar')}
+            className={cn("text-xs font-bold uppercase tracking-widest pb-1 transition-all border-b-2", activeTab === 'avatar' ? "border-brand-purple text-white" : "border-transparent text-brand-gray hover:text-slate-300")}
+          >
+            Ảnh đại diện
+          </button>
+          <button 
+            onClick={() => setActiveTab('password')}
+            className={cn("text-xs font-bold uppercase tracking-widest pb-1 transition-all border-b-2", activeTab === 'password' ? "border-brand-purple text-white" : "border-transparent text-brand-gray hover:text-slate-300")}
+          >
+            Mật khẩu
+          </button>
+        </div>
+
+        <div className="px-8 py-8">
+          <AnimatePresence mode="wait">
+            {message && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }} 
+                animate={{ opacity: 1, x: 0 }}
+                className={cn("mb-6 p-3 rounded-lg text-xs font-bold flex items-center gap-3 border", message.type === 'success' ? "bg-brand-emerald/10 border-brand-emerald/20 text-brand-emerald" : "bg-rose-500/10 border-rose-500/20 text-rose-400")}
+              >
+                {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                {message.text}
+              </motion.div>
             )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-900/20 transition-all uppercase tracking-widest text-xs disabled:opacity-50"
-            >
-              {loading ? 'Đang cập nhật...' : 'Cập nhật Avatar'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleUpdatePassword} className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-                Mật khẩu hiện tại
-              </label>
-              <input
-                type="password"
-                className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-orange-500/50 outline-none transition-all text-slate-200 placeholder:text-slate-700 font-mono"
-                placeholder="••••••••"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-                Mật khẩu mới
-              </label>
-              <input
-                type="password"
-                className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-orange-500/50 outline-none transition-all text-slate-200 placeholder:text-slate-700 font-mono"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 mt-2 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl shadow-xl shadow-rose-900/20 transition-all uppercase tracking-widest text-xs disabled:opacity-50"
-            >
-              {loading ? 'Đang cập nhật...' : 'Cập nhật Mật khẩu'}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            {activeTab === 'avatar' ? (
+              <motion.form 
+                key="avatar"
+                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                onSubmit={handleUpdateAvatar} className="space-y-6"
+              >
+                <div className="flex flex-col items-center gap-6">
+                  <div className="relative group">
+                    <img 
+                      src={previewUrl || 'https://ui-avatars.com/api/?name=User&background=020617&color=fff'} 
+                      className="w-24 h-24 rounded-full object-cover ring-2 ring-white/[0.08] shadow-2xl transition-all group-hover:ring-brand-purple/50" 
+                      alt="Avatar Preview" 
+                    />
+                    <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity">
+                       <Camera className="w-6 h-6 text-white" />
+                       <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            setAvatarFile(e.target.files[0]);
+                            setPreviewUrl(URL.createObjectURL(e.target.files[0]));
+                          }
+                       }} />
+                    </label>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest">Khuyến nghị: 512x512px</p>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading || !avatarFile} className="w-full btn-primary disabled:opacity-50 flex items-center justify-center gap-2">
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Lưu thay đổi
+                </button>
+              </motion.form>
+            ) : (
+              <motion.form 
+                key="password"
+                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                onSubmit={handleUpdatePassword} className="space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-brand-gray uppercase ml-1">Mật khẩu cũ</label>
+                  <div className="relative">
+                    <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-slate-800" placeholder="••••••••" required />
+                    <Lock className="absolute right-3 top-3.5 w-4 h-4 text-slate-800" />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-brand-gray uppercase ml-1">Mật khẩu mới</label>
+                  <div className="relative">
+                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-slate-800" placeholder="••••••••" required minLength={6} />
+                    <Lock className="absolute right-3 top-3.5 w-4 h-4 text-slate-800" />
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading} className="w-full btn-primary mt-4 disabled:opacity-50 flex items-center justify-center gap-2">
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Cập nhật mật khẩu
+                </button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="px-8 py-4 bg-black/40 text-center border-t border-white/[0.05]">
+           <p className="text-[9px] font-bold text-[#31343e] uppercase tracking-widest italic">Protected by ZôOS Security Infrastructure</p>
+        </div>
+      </motion.div>
+    </div>,
+    document.body
   );
 };

@@ -21,6 +21,24 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category?> GetByIdAsync(Guid id)
     {
-        return await _context.Categories.FindAsync(id);
+        // Use LINQ so EF Core global query filters (ShopId) are applied.
+        return await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task AddAsync(Category category)
+    {
+        await _context.Categories.AddAsync(category);
+    }
+
+    public async Task UpdateAsync(Category category)
+    {
+        _context.Categories.Update(category);
+        await Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Category category)
+    {
+        _context.Categories.Remove(category);
+        await Task.CompletedTask;
     }
 }

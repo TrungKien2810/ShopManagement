@@ -21,7 +21,8 @@ public class TableRepository : ITableRepository
 
     public async Task<Table?> GetByIdAsync(Guid id)
     {
-        return await _context.Tables.FindAsync(id);
+        // Use LINQ so EF Core global query filters (ShopId) are applied.
+        return await _context.Tables.FirstOrDefaultAsync(t => t.Id == id);
     }
 
     public async Task<Table> AddAsync(Table table)
@@ -38,7 +39,8 @@ public class TableRepository : ITableRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var table = await _context.Tables.FindAsync(id);
+        // Respect query filters; tables from other shops should not be touched.
+        var table = await _context.Tables.FirstOrDefaultAsync(t => t.Id == id);
         if (table != null)
         {
             _context.Tables.Remove(table);

@@ -69,7 +69,9 @@ public static class DbInitializer
             }
 
             // 5. Seed Categories & Products
-            if (!await context.Categories.AnyAsync())
+            // At startup there is no tenant header/claim, so global query filters would hide rows.
+            // Seed must ignore query filters to avoid duplicating data.
+            if (!await context.Categories.IgnoreQueryFilters().AnyAsync())
             {
                 var categories = new List<Category>
                 {

@@ -6,350 +6,343 @@ import { OrderPage } from "../components/OrderPage";
 import { orderApi } from "../api/orderApi";
 import { useSignalR } from "../hooks/useSignalR";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { shopApi } from "../api/shopApi";
+
 import { ProfileDropdown } from "../components/ProfileDropdown";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  LayoutDashboard, 
+  Map as MapIcon, 
+  Users, 
+  UtensilsCrossed,
+  RefreshCcw, 
+  Plus, 
+  ChevronRight,
+  CheckCircle2,
+  Loader2,
+  ArrowLeft
+} from "lucide-react";
+import { cn } from "../lib/utils";
+import { TableViewMap } from "../components/TableViewMap";
+import { Logo } from "../components/Logo";
+import { InviteStaffModal } from "../components/InviteStaffModal";
+import { CreateTableModal } from "../components/CreateTableModal";
+import { MenuManagement } from "../components/MenuManagement";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../api/apiClient";
 
 export const Dashboard: React.FC = () => {
   const { currentShop } = useAuth();
-  const navigate = useNavigate();
+  const shopRole = currentShop?.role;
+  const roleRank =
+    typeof shopRole === "number"
+      ? shopRole
+      : shopRole === "Owner"
+        ? 0
+        : shopRole === "Manager"
+          ? 1
+          : shopRole === "Staff"
+            ? 2
+            : undefined;
+  const canManage = roleRank !== undefined && roleRank <= 1;
   const [tables, setTables] = useState<TableDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notifications, setNotifications] = useState<
-    { id: number; message: string; type: "info" | "success" }[]
-  >([]);
-  const [viewingOrder, setViewingOrder] = useState<{
-    tableId: string;
-    tableName: string;
-    orderId: string;
-  } | null>(null);
+  const [notifications, setNotifications] = useState<{ id: number; message: string; type: "info" | "success" }[]>([]);
+  const [viewingOrder, setViewingOrder] = useState<{ tableId: string; tableName: string; orderId: string; } | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteData, setInviteData] = useState({ username: "", role: 2 }); // 2 is Staff
+  const [showCreateTableModal, setShowCreateTableModal] = useState(false);
+  const [activeNav, setActiveNav] = useState("tables");
+  const [staffList, setStaffList] = useState<{ username: string; role: number; joinedAt: string }[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const navigate = useNavigate();
 
-  useSignalR("http://localhost:5090/hubs/shop", (connection) => {
-    if (currentShop) {
-      connection.invoke("JoinShopGroup", currentShop.id);
-    }
-
-    connection.on("TableStatusUpdated", () => {
-      loadTables();
-      addNotification("Có thay đổi trạng thái bàn!", "info");
-    });
-
-    connection.on("ReceiveAlert", (message: string) => {
-      addNotification(`CẢNH BÁO: ${message}`, "info");
-    });
-  });
-
-  useEffect(() => {
-    loadTables();
-  }, [currentShop]);
-
-  const addNotification = (
-    message: string,
-    type: "info" | "success" = "info",
-  ) => {
+  const addNotification = (message: string, type: "info" | "success" = "info") => {
     const id = Date.now();
     setNotifications((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, 4000);
+    setTimeout(() => { setNotifications((prev) => prev.filter((n) => n.id !== id)); }, 4000);
+  };
+
+  useSignalR("http://localhost:5090/hubs/shop", (connection) => {
+    if (currentShop) connection.invoke("JoinShopGroup", currentShop.id);
+    connection.on("TableStatusUpdated", () => { loadTables(); addNotification("Trạng thái bàn đã cập nhật", "info"); });
+    connection.on("ReceiveAlert", (message: string) => addNotification(message, "info"));
+  });
+
+  useEffect(() => { loadTables(); }, [currentShop]);
+
+
+  const handleTableAction = async (table: TableDto) => {
+    if (table.status === TableStatus.Available) {
+       handleOpenTable(table.id);
+    } else {
+       try {
+         const activeOrder = await orderApi.getActiveOrder(table.id);
+         setViewingOrder({ tableId: table.id, tableName: table.name, orderId: activeOrder.id });
+       } catch (err) { setError("Không thể lấy thông tin đơn hàng"); }
+    }
   };
 
   const loadTables = async () => {
     if (!currentShop) return;
+    try { setLoading(true); const data = await tableApi.getAll(); setTables(data); }
+    catch (err) { setError("Lỗi kết nối Backend"); }
+    finally { setLoading(false); }
+  };
+
+  const loadStaff = async () => {
+    if (!currentShop) return;
+    setLoadingStaff(true);
     try {
-      setLoading(true);
-      const data = await tableApi.getAll();
-      setTables(data);
+      const resp = await apiClient.get(`/shop/${currentShop.id}/members`);
+      setStaffList(resp.data);
     } catch (err) {
-      setError("Không thể tải danh sách bàn. Kiểm tra Backend!");
+      console.error("Lỗi lấy danh sách NV", err);
     } finally {
-      setLoading(false);
+      setLoadingStaff(false);
     }
   };
+
+  useEffect(() => {
+    if (activeNav === 'staff') {
+      loadStaff();
+    }
+  }, [activeNav, currentShop]);
 
   const handleOpenTable = async (id: string) => {
     try {
       const response = await tableApi.open(id);
-      addNotification(
-        `Bàn ${response.tableName} đã được mở thành công!`,
-        "success",
-      );
+      addNotification(`Bàn ${response.tableName} đã mở`, "success");
       loadTables();
-      setViewingOrder({
-        tableId: id,
-        tableName: response.tableName,
-        orderId: response.orderId,
-      });
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Không thể mở bàn.");
-    }
-  };
-
-  const handleResetTable = async (id: string) => {
-    try {
-      await tableApi.reset(id);
-      addNotification("Đã dọn dẹp bàn xong!", "info");
-      loadTables();
-    } catch (err: any) {
-      setError("Không thể reset bàn.");
-    }
+      setViewingOrder({ tableId: id, tableName: response.tableName, orderId: response.orderId });
+    } catch (err: any) { setError(err.response?.data?.message || "Lỗi mở bàn"); }
   };
 
   const handleCheckout = async (id: string) => {
-    if (!window.confirm("Xác nhận thanh toán và đóng bàn?")) return;
-    try {
-      await tableApi.checkout(id);
-      addNotification("Thanh toán thành công!", "success");
-      loadTables();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Không thể thanh toán.");
-    }
-  };
-
-  const handleEnterTable = async (table: TableDto) => {
-    try {
-      const activeOrder = await orderApi.getActiveOrder(table.id);
-      setViewingOrder({
-        tableId: table.id,
-        tableName: table.name,
-        orderId: activeOrder.id,
-      });
-    } catch (err) {
-      setError("Không thể lấy thông tin đơn hàng.");
-    }
-  };
-
-  const handleInviteStaff = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentShop) return;
-    try {
-      await shopApi.invite(currentShop.id, inviteData);
-      addNotification(`Đã mời ${inviteData.username} thành công!`, "success");
-      setShowInviteModal(false);
-      setInviteData({ username: "", role: 2 });
-    } catch (err: any) {
-      setError(
-        err.response?.data || "Không tìm thấy người dùng hoặc lỗi hệ thống.",
-      );
-    }
+    if (!window.confirm("Xác nhận thanh toán?")) return;
+    try { await tableApi.checkout(id); addNotification("Thanh toán thành công", "success"); loadTables(); }
+    catch (err: any) { setError("Lỗi thanh toán"); }
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 font-inter p-4 md:p-8 relative overflow-hidden">
+    <div className="flex min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30">
+      {/* Sidebar - Same as before */}
+      <aside className="w-64 border-r border-white/[0.05] bg-slate-deep hidden md:flex flex-col">
+        <div className="p-6">
+          <div className="mb-8 px-2">
+            <Logo iconSize={4} textSize="text-lg" />
+          </div>
+
+          <nav className="space-y-1">
+             {[
+               { id: 'tables', label: 'Quản lý bàn', icon: LayoutDashboard },
+               { id: 'map', label: 'Sơ đồ (Map)', icon: MapIcon },
+               { id: 'menu', label: 'Thực đơn', icon: UtensilsCrossed },
+               { id: 'staff', label: 'Nhân viên', icon: Users },
+             ].map((item) => (
+               <button
+                 key={item.id}
+                 onClick={() => setActiveNav(item.id)}
+                 className={cn(
+                   "w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg transition-all group",
+                   activeNav === item.id 
+                    ? "bg-white/[0.05] text-white" 
+                    : "text-brand-gray hover:text-white hover:bg-white/[0.02]"
+                 )}
+               >
+                 <item.icon className={cn("w-4 h-4 transition-colors", activeNav === item.id ? "text-brand-purple" : "text-[#4c4f5a] group-hover:text-brand-gray")} />
+                 {item.label}
+               </button>
+             ))}
+          </nav>
+
+          <div className="mt-auto pt-6">
+            <button 
+              onClick={() => navigate('/shops')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all group font-semibold bg-white/[0.02] text-brand-gray border border-white/[0.05] hover:bg-white/[0.05] hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Đổi Quán (Back)
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col min-w-0 bg-void">
+        <header className="h-16 border-b border-white/[0.05] flex items-center justify-between px-8 bg-void/50 backdrop-blur-md sticky top-0 z-40">
+          <div className="flex items-center gap-4 text-sm font-medium text-brand-gray">
+            <span>{currentShop?.name}</span>
+            <ChevronRight className="w-3 h-3 text-[#31343e]" />
+            <span className={cn(activeNav === 'map' ? "text-white" : "")}>
+              {activeNav === 'map' ? 'Sơ đồ mặt bằng' : activeNav === 'menu' ? 'Quản lý thực đơn' : 'Danh sách bàn'}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+             <button onClick={loadTables} className="p-2 text-brand-gray hover:text-white transition-colors">
+                <RefreshCcw className={cn("w-4.5 h-4.5", loading && "animate-spin")} />
+             </button>
+             <ProfileDropdown />
+          </div>
+        </header>
+
+        <div className="p-8 max-w-7xl mx-auto w-full">
+           <div className="flex justify-between items-end mb-8">
+              <div>
+                 <h2 className="text-2xl font-bold tracking-tight mb-1">
+                    {activeNav === 'map' ? 'Sơ đồ mặt bằng' : activeNav === 'menu' ? 'Quản lý thực đơn' : activeNav === 'staff' ? 'Quản lý Nhân sự' : 'Danh sách Bàn'}
+                 </h2>
+                 <p className="text-sm text-brand-gray uppercase tracking-widest font-bold text-[10px]">
+                    {activeNav === 'map' ? 'Giao diện trực quan' : activeNav === 'menu' ? 'Danh mục & món' : activeNav === 'staff' ? 'Danh sách thành viên' : 'Quản lý trạng thái bàn'}
+                 </p>
+              </div>
+
+              {/* Action Buttons based on Nav */}
+              {activeNav === 'staff' && (
+                canManage ? (
+                  <button onClick={() => setShowInviteModal(true)} className="btn-primary flex items-center gap-2 text-xs">
+                    <Plus className="w-4 h-4" /> Mời nhân viên
+                  </button>
+                ) : (
+                  <button disabled className="btn-primary flex items-center gap-2 text-xs opacity-50 cursor-not-allowed bg-white/[0.05] border border-white/[0.1] text-brand-gray">
+                    Không có quyền mời
+                  </button>
+                )
+              )}
+
+              {activeNav === 'map' && (
+                canManage ? (
+                  <button onClick={() => setShowCreateTableModal(true)} className="px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/40 border border-brand-purple/30 rounded-xl text-brand-purple hover:text-white transition-all flex items-center gap-2 text-xs font-bold">
+                    <Plus className="w-4 h-4" /> Bố trí Bàn
+                  </button>
+                ) : null
+              )}
+           </div>
+
+           {error && (
+             <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm font-semibold">
+               {error}
+             </div>
+           )}
+
+           {loading ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+               {[1,2,3,4].map(i => <div key={i} className="h-40 linear-surface animate-pulse" />)}
+             </div>
+           ) : (
+             <>
+               {activeNav === 'map' ? (
+                  <TableViewMap 
+                    tables={tables} 
+                    onTableClick={handleTableAction}
+                    onOpenTable={handleOpenTable}
+                  />
+               ) : activeNav === 'menu' ? (
+                  canManage ? (
+                    <MenuManagement />
+                  ) : (
+                    <div className="linear-surface rounded-2xl border border-white/[0.05] p-10 text-center">
+                      <p className="text-sm font-semibold text-brand-gray">Bạn không có quyền quản lý thực đơn.</p>
+                    </div>
+                  )
+               ) : activeNav === 'staff' ? (
+                  <div className="linear-surface rounded-2xl border border-white/[0.05] overflow-hidden">
+                    {loadingStaff ? (
+                       <div className="p-12text-center flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-brand-purple my-12" /></div>
+                    ) : staffList.length === 0 ? (
+                      <div className="p-12 text-center border-dashed border-white/[0.1]">
+                         <Users className="w-12 h-12 text-[#4c4f5a] mx-auto mb-4" />
+                         <p className="text-sm font-semibold text-brand-gray">Chưa có thông tin nhân sự.</p>
+                      </div>
+                    ) : (
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-[#0b0c10] border-b border-white/[0.05]">
+                           <tr>
+                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">Username</th>
+                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">Vai trò</th>
+                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest text-right">Ngày tham gia</th>
+                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.02]">
+                           {staffList.map((st, i) => (
+                             <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="px-6 py-4 font-bold">{st.username}</td>
+                                <td className="px-6 py-4">
+                                  <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", st.role === 0 ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : st.role === 1 ? "bg-brand-purple/10 text-brand-purple border border-brand-purple/20" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20")}>
+                                     {st.role === 0 ? "Owner" : st.role === 1 ? "Manager" : "Staff"}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-brand-gray text-right font-medium">{new Date(st.joinedAt).toLocaleDateString('vi-VN')}</td>
+                             </tr>
+                           ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+               ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {tables.map((table) => (
+                      <motion.div layout key={table.id} className="p-5 linear-card group">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex flex-col">
+                             <span className="text-[10px] font-bold text-brand-gray uppercase tracking-widest mb-1">{table.location}</span>
+                             <h3 className="text-lg font-bold">{table.name}</h3>
+                          </div>
+                          <div className={cn("w-2 h-2 rounded-full", table.status === TableStatus.Available ? "bg-brand-emerald shadow-[0_0_10px_rgba(16,185,129,0.4)]" : "bg-brand-purple")} />
+                        </div>
+                        <div className="mt-auto">
+                          {table.status === TableStatus.Available ? (
+                            <button onClick={() => handleOpenTable(table.id)} className="w-full py-2 bg-white/[0.03] hover:bg-brand-purple border border-white/[0.08] hover:border-brand-purple rounded-lg text-xs font-bold transition-all">
+                              Phục vụ Bàn
+                            </button>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2">
+                               <button onClick={() => handleTableAction(table)} className="py-2 bg-brand-purple text-white rounded-lg text-xs font-bold">Chi tiết</button>
+                               <button onClick={() => handleCheckout(table.id)} className="py-2 bg-white/[0.03] hover:bg-white/10 rounded-lg text-xs font-bold">Thanh</button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+               )}
+             </>
+           )}
+        </div>
+      </main>
+
+      {/* Global Modals & Notifications */}
+      <AnimatePresence>
+         {notifications.map((n) => (
+           <motion.div
+             key={n.id}
+             initial={{ opacity: 0, x: 20, scale: 0.9 }}
+             animate={{ opacity: 1, x: 0, scale: 1 }}
+             exit={{ opacity: 0, scale: 0.9 }}
+             className={cn(
+               "fixed bottom-8 right-8 z-[500] px-6 py-4 linear-surface shadow-2xl flex items-center gap-3 min-w-[300px]",
+               n.type === "success" ? "border-brand-emerald/30" : "border-brand-purple/30"
+             )}
+           >
+             {n.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-brand-emerald" /> : <Loader2 className="w-5 h-5 text-brand-purple animate-spin" />}
+             <span className="text-sm font-semibold">{n.message}</span>
+           </motion.div>
+         ))}
+      </AnimatePresence>
+
+      {showInviteModal && (
+        <InviteStaffModal onClose={() => { setShowInviteModal(false); loadStaff(); }} />
+      )}
+
+      {showCreateTableModal && (
+        <CreateTableModal onClose={() => setShowCreateTableModal(false)} onSuccess={() => loadTables()} />
+      )}
+
       {viewingOrder && (
         <OrderPage
           tableId={viewingOrder.tableId}
           orderId={viewingOrder.orderId}
           tableName={viewingOrder.tableName}
-          onClose={() => {
-            setViewingOrder(null);
-            loadTables();
-          }}
+          onClose={() => { setViewingOrder(null); loadTables(); }}
         />
-      )}
-
-      {/* Notifications */}
-      <div className="fixed top-24 right-6 z-50 flex flex-col gap-3">
-        {notifications.map((n) => (
-          <div
-            key={n.id}
-            className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl animate-slideIn flex items-center gap-3 transition-all ${
-              n.type === "success"
-                ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-100"
-                : "bg-cyan-500/20 border-cyan-500/30 text-cyan-100"
-            }`}
-          >
-            <span className="font-semibold text-sm">{n.message}</span>
-          </div>
-        ))}
-      </div>
-
-      <header className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-center bg-slate-800/50 p-6 rounded-3xl border border-slate-700 backdrop-blur-md shadow-2xl">
-        <div>
-          <h1 className="text-4xl font-black bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent mb-1">
-            {currentShop?.name}{" "}
-            <span className="text-slate-500 text-lg font-medium">
-              Dashboard
-            </span>
-          </h1>
-        </div>
-        <div className="mt-4 md:mt-0 flex gap-3 items-center">
-          {(currentShop?.role === "Owner" ||
-            currentShop?.role === "Manager") && (
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="px-4 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition-all font-bold"
-            >
-              + Mời nhân viên
-            </button>
-          )}
-          <button
-            onClick={() => navigate("/shops")}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition-all border border-slate-600"
-          >
-            Đổi quán
-          </button>
-          <button
-            onClick={loadTables}
-            className="bg-slate-700 hover:bg-slate-600 p-3 rounded-xl border border-slate-600 transition-all"
-          >
-            🔄
-          </button>
-          <ProfileDropdown />
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto">
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-4 rounded-2xl mb-6 flex items-center gap-3">
-            ⚠️ {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-48 bg-slate-800/30 rounded-3xl animate-pulse"
-              ></div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {tables.map((table) => (
-              <div
-                key={table.id}
-                className={`p-6 rounded-3xl border transition-all duration-300 group hover:scale-[1.02] ${
-                  table.status === TableStatus.Available
-                    ? "bg-slate-800/40 border-slate-700 hover:border-emerald-500/50"
-                    : "bg-slate-800/20 border-slate-700/50 opacity-80"
-                }`}
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <h3 className="text-2xl font-bold">{table.name}</h3>
-                  <span
-                    className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase ${
-                      table.status === TableStatus.Available
-                        ? "bg-emerald-500/20 text-emerald-400"
-                        : "bg-slate-700 text-slate-500"
-                    }`}
-                  >
-                    {table.status === TableStatus.Available
-                      ? "Còn Trống"
-                      : "Đang Dùng"}
-                  </span>
-                </div>
-                <p className="text-slate-500 text-sm mb-6">
-                  {table.location} • {table.capacity} chỗ
-                </p>
-                {table.status === TableStatus.Available ? (
-                  <button
-                    onClick={() => handleOpenTable(table.id)}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-900/20"
-                  >
-                    Mở Bàn
-                  </button>
-                ) : (
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => handleEnterTable(table)}
-                      className="w-full py-3 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 font-bold rounded-2xl border border-emerald-500/30 transition-all"
-                    >
-                      Gọi Món
-                    </button>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => handleCheckout(table.id)}
-                        className="py-2 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 font-bold rounded-xl border border-orange-500/30 transition-all text-sm"
-                      >
-                        Thanh Toán
-                      </button>
-                      <button
-                        onClick={() => handleResetTable(table.id)}
-                        className="py-2 bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 text-xs font-medium rounded-xl transition-all"
-                      >
-                        Dọn Bàn
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {/* Invite Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-          <div
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
-            onClick={() => setShowInviteModal(false)}
-          ></div>
-          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-[32px] shadow-2xl animate-bounceIn">
-            <h2 className="text-2xl font-black text-white mb-2 italic tracking-tighter uppercase">
-              Mời Thành Viên 🍻
-            </h2>
-            <p className="text-slate-500 text-sm mb-8 font-medium">
-              Thêm nhân viên hoặc quản lý vào quán của bạn
-            </p>
-
-            <form onSubmit={handleInviteStaff} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-slate-800 font-bold"
-                  placeholder="Nhập username nhân viên..."
-                  value={inviteData.username}
-                  onChange={(e) =>
-                    setInviteData({ ...inviteData, username: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-                  Vai trò
-                </label>
-                <select
-                  className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all font-bold text-slate-300"
-                  value={inviteData.role}
-                  onChange={(e) =>
-                    setInviteData({
-                      ...inviteData,
-                      role: parseInt(e.target.value),
-                    })
-                  }
-                >
-                  <option value={2}>Nhân viên (Staff)</option>
-                  <option value={1}>Quản lý (Manager)</option>
-                </select>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowInviteModal(false)}
-                  className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl transition-all uppercase tracking-widest text-xs"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="flex-2 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-900/20 transition-all uppercase tracking-widest text-xs px-8"
-                >
-                  Gửi lời mời 🚀
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   );

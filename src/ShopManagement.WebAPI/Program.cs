@@ -16,6 +16,8 @@ using ShopManagement.Infrastructure.Authorization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Data.SqlClient;
+using ShopManagement.Infrastructure.Settings;
+using ShopManagement.WebAPI.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // 3. Đăng ký Services (Application Layer)
+builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<ITableService, TableService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
@@ -85,7 +88,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -101,6 +105,10 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Hệ thống quản lý nhà hàng thông minh ZôOS"
     });
 });
+
+
+//Cloudinary Config
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
 
 var app = builder.Build();
 
@@ -151,6 +159,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowReactApp");
+app.UseMiddleware<DomainExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

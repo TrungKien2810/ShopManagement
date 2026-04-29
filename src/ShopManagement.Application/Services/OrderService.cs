@@ -29,6 +29,8 @@ public class OrderService : IOrderService
         if (product == null) throw new EntityNotFoundException("Sản phẩm", request.ProductId);
 
         // Idempotency: Kiểm tra nếu Key đã tồn tại (Chống bấm đúp)
+        if (order.Status != OrderStatus.Open) throw new DomainException("Đơn hàng không còn ở trạng thái mở.");
+
         if (!string.IsNullOrEmpty(request.IdempotencyKey))
         {
             var alreadyExists = order.OrderItems.Any(oi => oi.IdempotencyKey == request.IdempotencyKey);
@@ -36,6 +38,8 @@ public class OrderService : IOrderService
         }
 
         // Rule Engine: Luồng Xanh / Luồng Đỏ
+        if (!product.IsAvailable) throw new DomainException("Món hiện đang hết bán.");
+
         var lineTotal = product.Price * request.Quantity;
         var status = OrderItemStatus.Pending; // Mặc định là Luồng Xanh (tự duyệt)
 
@@ -87,11 +91,19 @@ public class OrderService : IOrderService
         var order = await _unitOfWork.Orders.GetActiveOrderByTableIdAsync(tableId);
         if (order == null) throw new EntityNotFoundException("Đơn hàng đang hoạt động", tableId);
 
+        var acceptedAmount = order.OrderItems
+            .Where(oi => oi.Status != OrderItemStatus.Cancelled && oi.Status != OrderItemStatus.NeedsApproval)
+            .Sum(oi => oi.UnitPrice * oi.Quantity);
+
+        var needsApprovalCount = order.OrderItems.Count(oi => oi.Status == OrderItemStatus.NeedsApproval);
+
         return new OrderDto
         {
             Id = order.Id,
             TableId = order.TableId,
             TotalAmount = order.TotalAmount,
+            AcceptedAmount = acceptedAmount,
+            NeedsApprovalCount = needsApprovalCount,
             Status = order.Status,
             Items = order.OrderItems.Select(oi => new OrderItemDto
             {

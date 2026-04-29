@@ -6,6 +6,10 @@ namespace ShopManagement.Application.Interfaces;
 public interface IMenuService
 {
     Task<IEnumerable<CategoryDto>> GetMenuAsync();
+    Task<CategoryDto> AddCategoryAsync(CreateCategoryDto request);
+    Task<ProductDto> AddProductAsync(CreateProductDto request);
+    Task<CategoryDto> UpdateCategoryAsync(Guid categoryId, UpdateCategoryDto request);
+    Task<ProductDto> UpdateProductAsync(Guid productId, UpdateProductDto request);
 }
 
 public interface IOrderService

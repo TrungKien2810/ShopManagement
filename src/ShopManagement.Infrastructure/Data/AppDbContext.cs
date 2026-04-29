@@ -10,9 +10,15 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 {
     private readonly ITenantService? _tenantService;
 
+    // Query filters should be evaluated per-DbContext instance (per request),
+    // not captured once during model building.
+    public Guid CurrentShopId { get; private set; } = Guid.Empty;
+
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantService? tenantService = null) : base(options)
     {
         _tenantService = tenantService;
+        var tenantId = _tenantService?.GetTenantId();
+        if (tenantId.HasValue) CurrentShopId = tenantId.Value;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -127,18 +133,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<OrderItem>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
 
         // 9. Global Query Filters for Multi-tenancy
-        if (_tenantService != null)
-        {
-            var shopId = _tenantService.GetTenantId();
-            if (shopId.HasValue)
-            {
-                modelBuilder.Entity<Category>().HasQueryFilter(x => x.ShopId == shopId.Value);
-                modelBuilder.Entity<Product>().HasQueryFilter(x => x.ShopId == shopId.Value);
-                modelBuilder.Entity<Table>().HasQueryFilter(x => x.ShopId == shopId.Value);
-                modelBuilder.Entity<Order>().HasQueryFilter(x => x.ShopId == shopId.Value);
-                modelBuilder.Entity<OrderItem>().HasQueryFilter(x => x.ShopId == shopId.Value);
-            }
-        }
+        // NOTE: Using the DbContext instance property ensures the filter uses the
+        // current request's ShopId instead of being "frozen" at startup.
+        // When CurrentShopId is Guid.Empty (missing tenant), the filter returns no rows.
+        modelBuilder.Entity<Category>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Product>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Table>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Order>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<OrderItem>().HasQueryFilter(x => x.ShopId == CurrentShopId);
 
         // 10. Audit Log config
         modelBuilder.Entity<AuditLog>(entity =>

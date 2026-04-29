@@ -2,52 +2,45 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ProfileDropdown } from "../components/ProfileDropdown";
+import { Logo } from "../components/Logo";
+import { motion } from "framer-motion";
+import { 
+  ArrowRight, 
+  Store, 
+  Zap, 
+  ShieldCheck, 
+  BarChart3, 
+  Smartphone, 
+  Globe,
+  MonitorCheck
+} from "lucide-react";
+
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 font-inter selection:bg-orange-500/30">
+    <div className="min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30 overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-900/20">
-              <span className="text-2xl font-black text-white italic">Z</span>
-            </div>
-            <span className="text-2xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-              ZôOS
-            </span>
+      <nav className="fixed top-0 left-0 right-0 z-[100] border-b border-white/[0.05] bg-void/70 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
+          <Logo />
+          
+          <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-brand-gray">
+            <a href="#features" className="hover:text-white transition-colors">Tính năng</a>
+            <a href="#solutions" className="hover:text-white transition-colors">Giải pháp</a>
+            <a href="#support" className="hover:text-white transition-colors">Hỗ trợ</a>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-slate-400">
-            <a
-              href="#features"
-              className="hover:text-orange-400 transition-colors"
-            >
-              Tính năng
-            </a>
-            <a
-              href="#pricing"
-              className="hover:text-orange-400 transition-colors"
-            >
-              Bảng giá
-            </a>
-            <a
-              href="#contact"
-              className="hover:text-orange-400 transition-colors"
-            >
-              Liên hệ
-            </a>
-          </div>
+
           <div className="flex items-center gap-4">
             {user ? (
               <>
                 <button
                   onClick={() => navigate("/shops")}
-                  className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-xl border border-slate-700 transition-all active:scale-95 hidden sm:block"
+                  className="px-5 py-1.5 bg-white/[0.05] hover:bg-white/[0.1] text-xs font-bold rounded-full border border-white/[0.1] transition-all active:scale-95 hidden sm:block"
                 >
-                  Vào Dashboard
+                  Dashboard
                 </button>
                 <ProfileDropdown />
               </>
@@ -55,15 +48,16 @@ export const LandingPage: React.FC = () => {
               <>
                 <button
                   onClick={() => navigate("/login")}
-                  className="px-6 py-2.5 text-sm font-bold text-slate-300 hover:text-white transition-colors"
+                  className="px-5 py-1.5 text-xs font-bold text-brand-gray hover:text-white transition-colors"
                 >
                   Đăng nhập
                 </button>
                 <button
                   onClick={() => navigate("/register")}
-                  className="px-6 py-2.5 bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-900/20 transition-all active:scale-95"
+                  className="px-5 py-1.5 bg-brand-purple hover:bg-brand-purple/90 text-white text-xs font-bold rounded-full shadow-lg shadow-brand-purple/20 transition-all active:scale-95 flex items-center gap-2 group"
                 >
-                  Dùng thử miễn phí
+                  Dùng thử
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </>
             )}
@@ -72,145 +66,153 @@ export const LandingPage: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-20 px-6 relative overflow-hidden">
-        {/* Abstract Background Shapes */}
-        <div className="absolute top-20 right-[-10%] w-[500px] h-[500px] bg-orange-600/10 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 blur-[100px] rounded-full"></div>
-
+      <section className="pt-48 pb-32 px-8 relative">
+        <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-purple/5 blur-[120px] rounded-full pointer-events-none" />
+        
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          <div className="inline-block px-4 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-400 text-xs font-black uppercase tracking-[0.2em] mb-8 animate-fadeIn">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex px-3 py-1 bg-brand-purple/10 border border-brand-purple/20 rounded-full text-brand-purple text-[10px] font-bold uppercase tracking-widest mb-10"
+          >
             Nền tảng Quản lý Nhà hàng Thế hệ mới
-          </div>
-          <h1 className="text-6xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.9] animate-slideUp">
-            QUẢN LÝ QUÁN NHẬU
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-6xl md:text-8xl font-bold text-white mb-10 tracking-tight leading-[0.9]"
+          >
+            Vận hành tinh gọn.
             <br />
-            <span className="bg-gradient-to-r from-orange-400 via-red-500 to-rose-600 bg-clip-text text-transparent">
-              CHỈ VỚI MỘT CHẠM
-            </span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-slate-400 text-lg md:text-xl mb-12 font-medium leading-relaxed animate-slideUp delay-100">
-            ZôOS giúp bạn số hóa quy trình từ gọi món tại bàn bằng QR, quản lý
-            bếp, đến thanh toán và báo cáo doanh thu theo thời gian thực.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slideUp delay-200">
+            <span className="text-brand-gray italic">Tăng trưởng vượt bậc.</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="max-w-2xl mx-auto text-brand-gray text-lg md:text-xl mb-14 font-medium leading-relaxed"
+          >
+            Hệ điều hành ZôOS số hóa toàn bộ quy trình từ QR Order, quản lý bếp 
+            đến báo cáo real-time chỉ trong một nền tảng duy nhất.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
             <button
               onClick={() => navigate(user ? "/shops" : "/register")}
-              className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-black rounded-2xl shadow-2xl shadow-orange-900/40 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest text-sm"
+              className="btn-primary px-10 py-3.5 flex items-center gap-3 text-sm group"
             >
-              {user ? "Vào Dashboard Ngay" : "Bắt đầu ngay hôm nay"}
+              Bắt đầu hành trình
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="w-full sm:w-auto px-10 py-5 bg-slate-800 hover:bg-slate-700 text-white font-black rounded-2xl border border-slate-700 transition-all active:scale-95 uppercase tracking-widest text-sm">
-              Xem bản Demo 📺
+            <button className="px-10 py-3.5 bg-white/[0.02] hover:bg-white/[0.05] text-white text-sm font-bold rounded-lg border border-white/[0.08] transition-all">
+              Xem bản Demo
             </button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-slate-900/50 border-y border-slate-800/50">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
-          {[
-            { label: "Quán đang sử dụng", value: "500+" },
-            { label: "Đơn hàng mỗi tháng", value: "1M+" },
-            { label: "Tiết kiệm nhân lực", value: "30%" },
-            { label: "Tốc độ gọi món", value: "2s" },
-          ].map((stat, i) => (
-            <div key={i} className="text-center group">
-              <div className="text-4xl font-black text-white mb-2 group-hover:text-orange-400 transition-colors">
-                {stat.value}
-              </div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">
-                {stat.label}
-              </div>
-            </div>
-          ))}
+      {/* Featured Card Wall */}
+      <section id="features" className="py-24 bg-black/20 border-y border-white/[0.04]">
+        <div className="max-w-7xl mx-auto px-8">
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {[
+                { label: "Thiết bị không giới hạn", value: "Infinity", icon: Smartphone },
+                { label: "Độ trễ vận hành", value: "< 200ms", icon: Zap },
+                { label: "Bảo mật dữ liệu", value: "Enterprise", icon: ShieldCheck },
+                { label: "Hỗ trợ 24/7", value: "Direct", icon: Globe },
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                   <item.icon className="w-5 h-5 text-brand-gray mb-2" />
+                   <div className="text-3xl font-bold text-white tracking-tight">{item.value}</div>
+                   <div className="text-[10px] font-bold text-brand-gray uppercase tracking-widest">{item.label}</div>
+                </div>
+              ))}
+           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="py-32 px-6">
+      {/* Feature Grid */}
+      <section className="py-32 px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-black text-white mb-4">
-              Mọi thứ bạn cần để vận hành
-            </h2>
-            <p className="text-slate-400 font-medium">
-              Đơn giản hóa nghiệp vụ phức tạp bằng công nghệ thông minh
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
-                title: "QR Order Tĩnh",
-                desc: "Khách hàng tự quét mã QR tại bàn để xem menu và gọi món. Không cần cài ứng dụng, không cần đăng ký.",
-                icon: "📱",
+                title: "QR Order Tĩnh & Động",
+                desc: "Khách hàng quét mã QR tại bàn để gọi món tức thì. Tối ưu cho cả quầy bar và bàn tiệc.",
+                icon: Smartphone,
               },
               {
-                title: "Quản lý Real-time",
-                desc: "Đồng bộ hóa dữ liệu giữa Bàn - Bếp - Thu ngân tức thì qua công nghệ SignalR. Không bao giờ sót đơn.",
-                icon: "⚡",
+                title: "Đồng bộ SignalR",
+                desc: "Mọi thay đổi từ Bàn - Bếp - Thu ngân được cập nhật trong tích tắc mà không cần tải lại trang.",
+                icon: Zap,
               },
               {
-                title: "SaaS Multi-tenant",
-                desc: "Một tài khoản quản lý nhiều chuỗi quán. Phân quyền chi tiết cho Chủ quán, Quản lý và Nhân viên.",
-                icon: "🏢",
+                title: "Hệ sinh thái SaaS",
+                desc: "Quản lý đa cửa hàng trên cùng một tài khoản. Phân quyền vai trò Owner, Manager, Staff linh hoạt.",
+                icon: Store,
               },
               {
-                title: "Báo cáo Thông minh",
-                desc: "Biểu đồ doanh thu, món bán chạy, hiệu suất nhân viên được cập nhật liên tục trên Dashboard.",
-                icon: "📊",
+                title: "Phân tích Dữ liệu",
+                desc: "Biểu đồ trực quan về doanh thu và món bán chạy giúp bạn đưa ra quyết định kinh doanh chính xác.",
+                icon: BarChart3,
               },
               {
-                title: "Giao diện 'Một Chạm'",
-                desc: "Tối ưu hóa cho Tablet và điện thoại, giúp nhân viên thao tác nhanh nhất có thể trong giờ cao điểm.",
-                icon: "👆",
+                title: "Giám sát Thiết bị",
+                desc: "Theo dõi trạng thái kết nối và hiệu suất của từng thiết bị trong hệ thống theo thời gian thực.",
+                icon: MonitorCheck,
               },
               {
-                title: "An toàn & Bảo mật",
-                desc: "Dữ liệu được mã hóa và cô lập giữa các Shop (Isolation Layer), đảm bảo tính riêng tư tuyệt đối.",
-                icon: "🔒",
+                title: "Chứng chỉ Bảo mật",
+                desc: "Dữ liệu được mã hóa và cô lập hoàn toàn giữa các doanh nghiệp trên nền tảng ZôOS.",
+                icon: ShieldCheck,
               },
             ].map((f, i) => (
-              <div
+              <motion.div
+                whileHover={{ y: -5 }}
                 key={i}
-                className="p-8 bg-slate-800/30 border border-slate-700/50 rounded-3xl hover:bg-slate-800/50 hover:border-orange-500/30 transition-all group"
+                className="p-8 linear-card group"
               >
-                <div className="text-4xl mb-6 group-hover:scale-110 transition-transform inline-block">
-                  {f.icon}
+                <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mb-6 group-hover:border-brand-purple transition-colors">
+                  <f.icon className="w-5 h-5 text-brand-gray group-hover:text-brand-purple transition-colors" />
                 </div>
-                <h3 className="text-xl font-black text-white mb-4">
+                <h3 className="text-xl font-bold text-white mb-4 tracking-tight">
                   {f.title}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
+                <p className="text-brand-gray text-sm font-medium leading-relaxed">
                   {f.desc}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-6 border-t border-slate-800">
+      <footer className="py-20 px-8 border-t border-white/[0.05] bg-slate-deep">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black italic text-white">
-              Z
+          <div className="flex items-center gap-2.5 opacity-50">
+            <div className="w-6 h-6 bg-brand-gray rounded flex items-center justify-center">
+              <Store className="w-4 h-4 text-void" />
             </div>
-            <span className="text-xl font-black text-white uppercase tracking-tighter">
-              ZôOS
-            </span>
+            <span className="text-sm font-bold uppercase tracking-widest text-brand-gray">ZôOS Platform</span>
           </div>
-          <p className="text-slate-500 text-sm font-medium">
-            © 2026 ZôOS Nền tảng Quản lý Nhà hàng. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-slate-400 text-sm font-bold uppercase tracking-widest">
-            <a href="#" className="hover:text-white transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Terms
-            </a>
+          
+          <div className="flex gap-8 text-[10px] font-bold text-[#31343e] uppercase tracking-[0.2em]">
+            <span>v1.0.8 stable</span>
+            <span>All rights reserved © 2026</span>
+          </div>
+
+          <div className="flex gap-6 text-brand-gray text-xs font-bold uppercase tracking-widest">
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
           </div>
         </div>
       </footer>

@@ -34,6 +34,33 @@ public class TableService : ITableService
         });
     }
 
+    public async Task<TableDto> CreateTableAsync(ShopManagement.Application.DTOs.Table.CreateTableDto dto)
+    {
+        var shopId = _tenantService.GetTenantId() ?? throw new UnauthorizedAccessException("Không xác định được ShopId");
+        
+        var table = new Table
+        {
+            Id = Guid.NewGuid(),
+            ShopId = shopId,
+            Name = dto.Name,
+            Capacity = dto.Capacity,
+            Location = dto.Location,
+            Status = TableStatus.Available
+        };
+
+        await _unitOfWork.Tables.AddAsync(table);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new TableDto
+        {
+            Id = table.Id,
+            Name = table.Name,
+            Capacity = table.Capacity,
+            Status = table.Status,
+            Location = table.Location
+        };
+    }
+
     public async Task ResetTableAsync(Guid tableId)
     {
         var table = await _unitOfWork.Tables.GetByIdAsync(tableId);
@@ -43,7 +70,6 @@ public class TableService : ITableService
             await _unitOfWork.Tables.UpdateAsync(table);
             await _unitOfWork.SaveChangesAsync();
             
-            // Thông báo toàn bộ Shop rằng bàn này đã trống
             await _notificationService.NotifyTableStatusUpdatedAsync(table.ShopId, tableId, TableStatus.Available);
         }
     }
@@ -56,21 +82,17 @@ public class TableService : ITableService
             throw new EntityNotFoundException("Bàn", tableId);
         }
 
-        // 2. Kiểm tra trạng thái
         if (table.Status != TableStatus.Available)
         {
             throw new DomainException($"Bàn {table.Name} hiện đang không rỗng (Trạng thái: {table.Status}).");
         }
 
-        // 3. Thực thi nghiệp vụ trong Transaction thông qua UnitOfWork
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            // Cập nhật trạng thái bàn
             table.Status = TableStatus.InUse;
             await _unitOfWork.Tables.UpdateAsync(table);
 
-            // Tạo Order mới
             var order = new Order
             {
                 Id = Guid.NewGuid(),
@@ -83,14 +105,9 @@ public class TableService : ITableService
             };
 
             await _unitOfWork.Orders.AddAsync(order);
-            
-            // Lưu toàn bộ thay đổi
             await _unitOfWork.SaveChangesAsync();
-            
-            // Cam kết giao dịch
             await _unitOfWork.CommitTransactionAsync();
             
-            // Thông báo cho Shop quản lý
             await _notificationService.NotifyTableStatusUpdatedAsync(table.ShopId, tableId, TableStatus.InUse);
 
             return new OpenTableResponse
@@ -118,19 +135,16 @@ public class TableService : ITableService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            // 1. Đóng đơn hàng
             order.Status = OrderStatus.Paid;
             order.CheckOutTime = DateTime.UtcNow;
             await _unitOfWork.Orders.UpdateAsync(order);
 
-            // 2. Trả bàn về trạng thái Trống
             table.Status = TableStatus.Available;
             await _unitOfWork.Tables.UpdateAsync(table);
 
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
 
-            // 3. Thông báo Real-time
             await _notificationService.NotifyTableStatusUpdatedAsync(table.ShopId, tableId, TableStatus.Available);
         }
         catch (Exception)

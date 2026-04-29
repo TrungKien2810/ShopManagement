@@ -52,7 +52,7 @@ public class AuthController : ControllerBase
             return Unauthorized("Sai tài khoản hoặc mật khẩu.");
 
         var token = GenerateJwtToken(user);
-        return Ok(new { Token = token, Username = user.UserName });
+        return Ok(new { Token = token, Username = user.UserName, AvatarUrl = user.AvatarUrl });
     }
 
     private string GenerateJwtToken(ApplicationUser user)

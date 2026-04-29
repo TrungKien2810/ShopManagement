@@ -25,6 +25,13 @@ public class TablesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost]
+    public async Task<ActionResult<TableDto>> CreateTable([FromBody] ShopManagement.Application.DTOs.Table.CreateTableDto request)
+    {
+        var result = await _tableService.CreateTableAsync(request);
+        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+    }
+
     [HttpPost("{id}/reset")]
     public async Task<IActionResult> Reset(Guid id)
     {

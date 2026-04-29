@@ -7,6 +7,8 @@ public class OrderDto
     public Guid Id { get; set; }
     public Guid TableId { get; set; }
     public decimal TotalAmount { get; set; }
+    public decimal AcceptedAmount { get; set; }
+    public int NeedsApprovalCount { get; set; }
     public OrderStatus Status { get; set; }
     public IEnumerable<OrderItemDto> Items { get; set; } = [];
 }

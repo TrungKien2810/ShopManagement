@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+// @ts-ignore
 import axios from "axios";
+import { motion } from "framer-motion";
+import { User, Mail, Lock, ArrowRight, Loader2, UserCircle, ArrowLeft } from "lucide-react";
+import { Logo } from "../components/Logo";
 
 export const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -47,117 +51,167 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f172a] text-slate-200 p-6 selection:bg-orange-500/30">
-      <div className="max-w-xl w-full bg-slate-800/40 p-10 rounded-[40px] shadow-2xl border border-slate-700/50 backdrop-blur-xl animate-fadeIn">
+    <div className="min-h-screen flex items-center justify-center bg-void p-6 relative overflow-hidden font-sans">
+      {/* Background Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-purple/5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-emerald/5 blur-[120px] rounded-full" />
+
+        <div className="relative z-10 w-full max-w-[480px]">
+          <button 
+            onClick={() => navigate('/')}
+            className="mb-8 text-brand-gray hover:text-white font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 transition-all group"
+          >
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+            Quay lại trang chủ
+          </button>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full linear-surface p-10 shadow-2xl"
+          >
         <div className="text-center mb-10">
-          <div className="inline-block w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-900/20 mb-6 font-black italic text-3xl text-white">
-            Z
+          <div className="flex justify-center mb-6">
+            <Logo iconSize={6} textSize="text-3xl" />
           </div>
-          <h1 className="text-4xl font-black bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             Tham gia ZôOS
           </h1>
-          <p className="text-slate-500 font-medium uppercase tracking-widest text-xs">
-            Bắt đầu quản lý quán nhậu của bạn
+          <p className="text-brand-gray text-[10px] font-bold uppercase tracking-widest">
+            Nền tảng Quản lý Nhà hàng Thế hệ mới
           </p>
         </div>
 
         {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-2xl mb-8 text-sm font-bold animate-shake">
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-lg"
+          >
             ⚠️ {error}
-          </div>
+          </motion.div>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <div className="space-y-2">
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-              Username
-            </label>
-            <input
-              name="username"
-              type="text"
-              className="w-full px-5 py-4 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700"
-              placeholder="zoodaduo"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-              Email
-            </label>
-            <input
-              name="email"
-              type="email"
-              className="w-full px-5 py-4 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700"
-              placeholder="hello@zoos.vn"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="md:col-span-2 space-y-2">
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
+        <form onSubmit={handleSubmit} className="space-y-5">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="absolute left-4 top-3.5 w-4 h-4 text-[#4c4f5a]" />
+                  <input
+                    name="username"
+                    type="text"
+                    className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm"
+                    placeholder="Tên dùng để đăng nhập"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-3.5 w-4 h-4 text-[#4c4f5a]" />
+                  <input
+                    name="email"
+                    type="email"
+                    className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm"
+                    placeholder="example@gmail.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+           </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">
               Họ và Tên
             </label>
-            <input
-              name="fullName"
-              type="text"
-              className="w-full px-5 py-4 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700"
-              placeholder="Nguyễn Văn Zô"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-            />
+            <div className="relative">
+              <UserCircle className="absolute left-4 top-3.5 w-4 h-4 text-[#4c4f5a]" />
+              <input
+                name="fullName"
+                type="text"
+                className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm"
+                placeholder="Nhập tên đầy đủ của bạn"
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-              Mật khẩu
-            </label>
-            <input
-              name="password"
-              type="password"
-              className="w-full px-5 py-4 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-3.5 w-4 h-4 text-[#4c4f5a]" />
+                <input
+                  name="password"
+                  type="password"
+                  className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1">
+                Xác nhận
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-3.5 w-4 h-4 text-[#4c4f5a]" />
+                <input
+                  name="confirmPassword"
+                  type="password"
+                  className="w-full pl-11 pr-4 py-3.5 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-              Xác nhận
-            </label>
-            <input
-              name="confirmPassword"
-              type="password"
-              className="w-full px-5 py-4 bg-slate-900/50 border border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-700"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="md:col-span-2 mt-4 w-full py-5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-slate-700 disabled:to-slate-700 text-white font-black rounded-2xl shadow-2xl shadow-orange-900/30 transition-all transform active:scale-95 uppercase tracking-[0.2em] text-sm"
+            className="w-full btn-primary mt-4 flex items-center justify-center gap-2 group"
           >
-            {loading ? "Đang tạo tài khoản..." : "Đăng ký ngay 🚀"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Tạo tài khoản"}
+            {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
-        <p className="mt-8 text-center text-slate-500 text-sm font-medium">
+
+        <p className="mt-8 text-center text-brand-gray text-xs font-medium">
           Đã có tài khoản?{" "}
           <Link
             to="/login"
-            className="text-orange-400 font-black hover:text-orange-300 transition-colors uppercase tracking-widest ml-2"
+            className="text-white font-bold hover:text-brand-purple transition-colors ml-1"
           >
-            Đăng nhập
+            Đăng nhập ngay
           </Link>
         </p>
+
+        <div className="mt-8 pt-6 border-t border-white/[0.04] text-center">
+            <p className="text-[9px] font-bold text-[#31343e] uppercase tracking-widest italic">ZôOS Engine v1.0.8 • Secure Registration</p>
+        </div>
+        </motion.div>
       </div>
     </div>
   );

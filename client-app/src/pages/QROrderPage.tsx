@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { MenuGrid } from "../components/MenuGrid";
 import { orderApi } from "../api/orderApi";
 import { useSignalR } from "../hooks/useSignalR";
+import { OrderItemStatus } from "../models/order";
 
 export const QROrderPage: React.FC = () => {
   const { tableId } = useParams<{ tableId: string }>();
@@ -11,6 +12,7 @@ export const QROrderPage: React.FC = () => {
     { productId: string; name: string; quantity: number; price: number }[]
   >([]);
   const [placedItems, setPlacedItems] = useState<any[]>([]);
+  const [acceptedAmount, setAcceptedAmount] = useState<number>(0);
   const [isOrdering, setIsOrdering] = useState(false);
   const [message, setMessage] = useState<{
     text: string;
@@ -28,6 +30,7 @@ export const QROrderPage: React.FC = () => {
         const order = await orderApi.getActiveOrder(tableId);
         setOrderId(order.id);
         setPlacedItems(order.items || []);
+        setAcceptedAmount(order.acceptedAmount ?? 0);
       } catch (err) {
         setMessage({
           text: "Bàn chưa được mở. Vui lòng báo nhân viên!",
@@ -42,13 +45,13 @@ export const QROrderPage: React.FC = () => {
       connection.invoke("JoinTableGroup", tableId);
     }
 
-    connection.on("OrderUpdated", (id) => {
+    connection.on("OrderUpdated", (id: string) => {
       if (id === orderId || !orderId) {
         loadActiveOrder();
       }
     });
 
-    connection.on("TableStatusUpdated", (id, status) => {
+    connection.on("TableStatusUpdated", (id: string, status: number) => {
       if (id === tableId && status === 0) {
         // Available
         window.location.reload();
@@ -56,7 +59,7 @@ export const QROrderPage: React.FC = () => {
     });
   });
 
-  const handleAddToOrder = (product: any) => {
+  const handleAddToOrder = (product: { id: string; name: string; price: number }) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
@@ -133,9 +136,7 @@ export const QROrderPage: React.FC = () => {
                 {new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",
-                }).format(
-                  placedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
-                )}
+                }).format(acceptedAmount)}
               </span>
             </h3>
             <div className="space-y-3">
@@ -155,18 +156,18 @@ export const QROrderPage: React.FC = () => {
                   </div>
                   <span
                     className={`text-[9px] font-black px-2 py-1 rounded-md ${
-                      item.status === 0
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : item.status === 1
-                          ? "bg-orange-500/10 text-orange-500"
-                          : "bg-slate-700 text-slate-400"
+                      item.status === OrderItemStatus.NeedsApproval
+                        ? "bg-orange-500/10 text-orange-500"
+                        : item.status === OrderItemStatus.Cancelled
+                          ? "bg-slate-700 text-slate-400"
+                          : "bg-emerald-500/10 text-emerald-500"
                     }`}
                   >
-                    {item.status === 0
-                      ? "ĐÃ NHẬN"
-                      : item.status === 1
-                        ? "ĐANG CHỜ DUYỆT"
-                        : "ĐÃ HỦY"}
+                    {item.status === OrderItemStatus.NeedsApproval
+                      ? "ĐANG CHỜ DUYỆT"
+                      : item.status === OrderItemStatus.Cancelled
+                        ? "ĐÃ HỦY"
+                        : "ĐÃ NHẬN"}
                   </span>
                 </div>
               ))}

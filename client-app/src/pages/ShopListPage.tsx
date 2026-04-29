@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { shopApi } from '../api/shopApi';
 import { ProfileDropdown } from '../components/ProfileDropdown';
+import { ArrowLeft } from 'lucide-react';
 
 export const ShopListPage: React.FC = () => {
   const [shops, setShops] = useState<any[]>([]);
@@ -28,16 +29,27 @@ export const ShopListPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-void text-white p-8 font-sans">
+      <div className="max-w-4xl mx-auto pt-4 relative z-10">
+        <button 
+          onClick={() => navigate('/')}
+          className="mb-8 text-brand-gray hover:text-white font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 transition-all group"
+        >
+          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+          Quay lại trang chủ
+        </button>
+
         <div className="flex justify-between items-center mb-12">
-          <h1 className="text-4xl font-extrabold tracking-tight">Cửa hàng của bạn</h1>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl font-extrabold tracking-tight">Cửa hàng của bạn</h1>
+            <p className="text-brand-gray text-xs font-bold uppercase tracking-widest">Chọn hoặc tạo một không gian quản lý</p>
+          </div>
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate('/create-shop')}
-              className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 rounded-xl font-bold transition-all shadow-lg shadow-orange-900/20 text-sm"
+              className="px-6 py-2.5 bg-white/[0.05] hover:bg-white/[0.1] rounded-xl font-bold transition-all border border-white/[0.08] hover:border-brand-purple text-sm flex items-center gap-2"
             >
-              + Tạo quán mới
+              Tạo quán mới
             </button>
             <ProfileDropdown />
           </div>

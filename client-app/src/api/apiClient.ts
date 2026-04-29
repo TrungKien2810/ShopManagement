@@ -1,3 +1,4 @@
+// @ts-ignore
 import axios from "axios";
 
 // Khởi tạo một instance của Axios với các cấu hình mặc định
@@ -8,7 +9,7 @@ const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use((config: any) => {
   const userStr = localStorage.getItem("zoos_user");
   const shopStr = localStorage.getItem("zoos_shop");
   

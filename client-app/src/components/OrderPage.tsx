@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MenuGrid } from './MenuGrid';
 import { OrderSidebar } from './OrderSidebar';
 import { orderApi } from '../api/orderApi';
+import { OrderItemStatus } from '../models/order';
 
 interface OrderPageProps {
   tableId: string;
@@ -13,7 +14,8 @@ interface OrderPageProps {
 export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderId, onClose }) => {
   const [pendingItems, setPendingItems] = useState<any[]>([]);
   const [placedItems, setPlacedItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [acceptedAmount, setAcceptedAmount] = useState<number>(0);
+  const [needsApprovalCount, setNeedsApprovalCount] = useState<number>(0);
 
   useEffect(() => {
     loadOrder();
@@ -21,13 +23,12 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
 
   const loadOrder = async () => {
     try {
-      setLoading(true);
       const order = await orderApi.getActiveOrder(tableId);
       setPlacedItems(order.items || []);
+      setAcceptedAmount(order.acceptedAmount ?? 0);
+      setNeedsApprovalCount(order.needsApprovalCount ?? 0);
     } catch (err) {
       console.error("Không thể tải đơn hàng", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,7 +73,7 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-[#0c1222] flex flex-col md:flex-row animate-fadeIn">
+    <div className="fixed inset-0 z-[500] bg-void flex flex-col md:flex-row animate-fadeIn overflow-hidden">
       {/* Main Menu Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-10">
         <div className="max-w-4xl mx-auto flex flex-col gap-10">
@@ -80,6 +81,18 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
               <div>
                  <h2 className="text-4xl font-black text-slate-100 mb-1">{tableName}</h2>
                  <p className="text-slate-500 font-bold uppercase tracking-wider text-xs">Thực đơn ZôOS sành điệu</p>
+                 <div className="mt-4 flex flex-wrap gap-3">
+                   <div className="bg-slate-900/40 border border-slate-800 rounded-2xl px-4 py-3">
+                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tạm tính (đã nhận)</div>
+                     <div className="text-lg font-black text-emerald-400">
+                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(acceptedAmount)}
+                     </div>
+                   </div>
+                   <div className="bg-slate-900/40 border border-slate-800 rounded-2xl px-4 py-3">
+                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Chờ duyệt</div>
+                     <div className="text-lg font-black text-orange-400">{needsApprovalCount}</div>
+                   </div>
+                 </div>
               </div>
               <button 
                 onClick={onClose}
@@ -101,7 +114,7 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
                           <div className="text-xs text-slate-500">{item.quantity} x {new Intl.NumberFormat('vi-VN').format(item.unitPrice)}</div>
                        </div>
                        <div className="flex items-center gap-3">
-                          {item.status === 1 && ( // NeedsApproval
+                          {item.status === OrderItemStatus.NeedsApproval && (
                             <button 
                               onClick={() => handleApproveItem(item.productId)}
                               className="bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-lg hover:bg-orange-400 transition-all shadow-lg shadow-orange-900/20"
@@ -110,11 +123,11 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
                             </button>
                           )}
                           <span className={`text-[10px] font-black px-2 py-1 rounded-md ${
-                            item.status === 0 ? 'bg-emerald-500/10 text-emerald-500' : 
-                            item.status === 1 ? 'bg-orange-500/10 text-orange-500 animate-pulse' : 
-                            'bg-slate-700 text-slate-400'
+                            item.status === OrderItemStatus.NeedsApproval ? 'bg-orange-500/10 text-orange-500 animate-pulse' :
+                            item.status === OrderItemStatus.Cancelled ? 'bg-slate-700 text-slate-400' :
+                            'bg-emerald-500/10 text-emerald-500'
                           }`}>
-                            {item.status === 0 ? 'OK' : item.status === 1 ? 'CHỜ DUYỆT' : 'ĐÃ HỦY'}
+                            {item.status === OrderItemStatus.NeedsApproval ? 'CHỜ DUYỆT' : item.status === OrderItemStatus.Cancelled ? 'ĐÃ HỦY' : 'OK'}
                           </span>
                        </div>
                     </div>
