@@ -12,6 +12,8 @@ public static class DbInitializer
     {
         try
         {
+            await EnsureTableAreaSchemaAsync(context);
+
             // 1. Seed Roles
             var roles = new[] { "Admin", "Staff" };
             foreach (var role in roles)
@@ -97,5 +99,49 @@ public static class DbInitializer
             if (ex.InnerException != null) Console.WriteLine($"[INNER]: {ex.InnerException.Message}");
             throw;
         }
+    }
+
+    private static async Task EnsureTableAreaSchemaAsync(AppDbContext context)
+    {
+        var createTableAreasSql = """
+IF OBJECT_ID(N'[dbo].[TableAreas]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[TableAreas] (
+        [Id] uniqueidentifier NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [ShopId] uniqueidentifier NOT NULL,
+        [Name] nvarchar(100) NOT NULL,
+        [IsActive] bit NOT NULL,
+        [SortOrder] int NOT NULL,
+        CONSTRAINT [PK_TableAreas] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_TableAreas_Shops_ShopId] FOREIGN KEY ([ShopId]) REFERENCES [dbo].[Shops] ([Id]) ON DELETE NO ACTION
+    );
+END
+""";
+
+        var addAreaIdColumnSql = """
+IF COL_LENGTH('dbo.Tables', 'AreaId') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Tables] ADD [AreaId] uniqueidentifier NULL;
+END
+""";
+
+        var addAreaFkSql = """
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE name = 'FK_Tables_TableAreas_AreaId'
+)
+BEGIN
+    ALTER TABLE [dbo].[Tables]
+    ADD CONSTRAINT [FK_Tables_TableAreas_AreaId]
+    FOREIGN KEY ([AreaId]) REFERENCES [dbo].[TableAreas] ([Id]) ON DELETE SET NULL;
+END
+""";
+
+        await context.Database.ExecuteSqlRawAsync(createTableAreasSql);
+        await context.Database.ExecuteSqlRawAsync(addAreaIdColumnSql);
+        await context.Database.ExecuteSqlRawAsync(addAreaFkSql);
     }
 }

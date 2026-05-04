@@ -18,19 +18,27 @@ public class MenuService : IMenuService
 
     public async Task<IEnumerable<CategoryDto>> GetMenuAsync()
     {
-        var categories = await _unitOfWork.Categories.GetAllAsync();
-        var menu = new List<CategoryDto>();
+        var categories = (await _unitOfWork.Categories.GetAllAsync()).ToList();
+        if (categories.Count == 0) return Array.Empty<CategoryDto>();
 
-        foreach (var cat in categories)
+        // Avoid N+1: fetch all products for the returned categories in a single query.
+        var categoryIds = categories.Select(c => c.Id).ToList();
+        var products = await _unitOfWork.Products.GetByCategoryIdsAsync(categoryIds);
+        var productsByCategoryId = products
+            .GroupBy(p => p.CategoryId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return categories.Select(cat =>
         {
-            var products = await _unitOfWork.Products.GetByCategoryIdAsync(cat.Id);
-            menu.Add(new CategoryDto
+            var categoryProducts = productsByCategoryId.TryGetValue(cat.Id, out var list) ? list : new List<Product>();
+
+            return new CategoryDto
             {
                 Id = cat.Id,
                 Name = cat.Name,
                 Description = cat.Description,
                 IsActive = cat.IsActive,
-                Products = products.Select(p => new ProductDto
+                Products = categoryProducts.Select(p => new ProductDto
                 {
                     Id = p.Id,
                     Name = p.Name,
@@ -39,10 +47,8 @@ public class MenuService : IMenuService
                     Description = p.Description,
                     IsAvailable = p.IsAvailable
                 })
-            });
-        }
-
-        return menu;
+            };
+        }).ToList();
     }
 
     public async Task<CategoryDto> AddCategoryAsync(CreateCategoryDto request)
@@ -168,5 +174,46 @@ public class MenuService : IMenuService
             Description = product.Description,
             IsAvailable = product.IsAvailable
         };
+    }
+
+    public async Task ArchiveCategoryAsync(Guid categoryId)
+    {
+        var shopId = _tenantService.GetTenantId();
+        if (!shopId.HasValue) throw new UnauthorizedAccessException("Không xác định được ShopId");
+
+        var category = await _unitOfWork.Categories.GetByIdAsync(categoryId);
+        if (category == null) throw new EntityNotFoundException("Danh mục", categoryId);
+        if (category.ShopId != shopId.Value) throw new DomainException("Danh mục không thuộc quán hiện tại.");
+
+        // Soft-delete by deactivating the category. Also mark its products unavailable to prevent ordering.
+        category.IsActive = false;
+        await _unitOfWork.Categories.UpdateAsync(category);
+
+        var products = await _unitOfWork.Products.GetByCategoryIdAsync(categoryId);
+        foreach (var product in products)
+        {
+            if (product.IsAvailable)
+            {
+                product.IsAvailable = false;
+                await _unitOfWork.Products.UpdateAsync(product);
+            }
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task ArchiveProductAsync(Guid productId)
+    {
+        var shopId = _tenantService.GetTenantId();
+        if (!shopId.HasValue) throw new UnauthorizedAccessException("Không xác định được ShopId");
+
+        var product = await _unitOfWork.Products.GetByIdAsync(productId);
+        if (product == null) throw new EntityNotFoundException("Sản phẩm", productId);
+        if (product.ShopId != shopId.Value) throw new DomainException("Sản phẩm không thuộc quán hiện tại.");
+
+        // Soft-delete by making the product unavailable.
+        product.IsAvailable = false;
+        await _unitOfWork.Products.UpdateAsync(product);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

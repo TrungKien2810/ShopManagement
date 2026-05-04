@@ -10,6 +10,8 @@ public interface IMenuService
     Task<ProductDto> AddProductAsync(CreateProductDto request);
     Task<CategoryDto> UpdateCategoryAsync(Guid categoryId, UpdateCategoryDto request);
     Task<ProductDto> UpdateProductAsync(Guid productId, UpdateProductDto request);
+    Task ArchiveCategoryAsync(Guid categoryId);
+    Task ArchiveProductAsync(Guid productId);
 }
 
 public interface IOrderService

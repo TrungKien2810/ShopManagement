@@ -66,4 +66,18 @@ public class TablesController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("{fromId}/transfer/{toId}")]
+    public async Task<ActionResult<TransferTableResponse>> TransferTable(Guid fromId, Guid toId)
+    {
+        try
+        {
+            var result = await _tableService.TransferTableAsync(fromId, toId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

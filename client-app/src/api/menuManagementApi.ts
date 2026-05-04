@@ -9,6 +9,9 @@ export const menuManagementApi = {
     const response = await apiClient.put(`/menu/categories/${id}`, request);
     return response.data;
   },
+  deleteCategory: async (id: string) => {
+    await apiClient.delete(`/menu/categories/${id}`);
+  },
   createProduct: async (request: {
     name: string;
     price: number;
@@ -34,6 +37,9 @@ export const menuManagementApi = {
     const response = await apiClient.put(`/menu/products/${id}`, request);
     return response.data;
   },
+  deleteProduct: async (id: string) => {
+    await apiClient.delete(`/menu/products/${id}`);
+  },
   uploadPhoto: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -43,4 +49,3 @@ export const menuManagementApi = {
     return response.data as { url: string };
   },
 };
-

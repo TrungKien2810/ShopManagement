@@ -31,6 +31,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Product> Products { get; set; } = null!;
     public DbSet<Table> Tables { get; set; } = null!;
+    public DbSet<TableArea> TableAreas { get; set; } = null!;
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<OrderItem> OrderItems { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
@@ -65,6 +66,18 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Location).HasMaxLength(100);
+
+            entity.HasOne(e => e.Area)
+                  .WithMany(a => a.Tables)
+                  .HasForeignKey(e => e.AreaId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<TableArea>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => new { e.ShopId, e.Name }).IsUnique();
         });
 
         // 4. Cấu hình Order
@@ -129,6 +142,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Category>().HasOne(x => x.Shop).WithMany(x => x.Categories).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Product>().HasOne(x => x.Shop).WithMany(x => x.Products).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Table>().HasOne(x => x.Shop).WithMany(x => x.Tables).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<TableArea>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Order>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<OrderItem>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
 
@@ -139,6 +153,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Category>().HasQueryFilter(x => x.ShopId == CurrentShopId);
         modelBuilder.Entity<Product>().HasQueryFilter(x => x.ShopId == CurrentShopId);
         modelBuilder.Entity<Table>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<TableArea>().HasQueryFilter(x => x.ShopId == CurrentShopId);
         modelBuilder.Entity<Order>().HasQueryFilter(x => x.ShopId == CurrentShopId);
         modelBuilder.Entity<OrderItem>().HasQueryFilter(x => x.ShopId == CurrentShopId);
 

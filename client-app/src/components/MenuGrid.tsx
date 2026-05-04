@@ -43,10 +43,10 @@ export const MenuGrid: React.FC<MenuGridProps> = ({ onSelectItem }) => {
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`px-6 py-3 rounded-2xl font-bold whitespace-nowrap transition-all ${
+            className={`min-h-12 px-5 py-3 rounded-2xl font-bold whitespace-nowrap transition-all border ${
               selectedCategory === cat.id 
-              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/40' 
-              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              ? 'bg-brand-purple/20 text-white border-brand-purple/30 shadow-glow-purple' 
+              : 'bg-white/[0.02] text-brand-gray border-white/[0.05] hover:bg-white/[0.05] hover:text-white'
             }`}
           >
             {cat.name}
@@ -63,26 +63,28 @@ export const MenuGrid: React.FC<MenuGridProps> = ({ onSelectItem }) => {
               if (product.isAvailable === false) return;
               onSelectItem(product);
             }}
-            className={`bg-slate-800/50 border border-slate-700 p-4 rounded-3xl transition-all group shadow-xl ${
-              product.isAvailable === false ? "opacity-50 cursor-not-allowed" : "hover:border-emerald-500/50 cursor-pointer"
+            className={`bg-[#08090a]/40 border border-white/[0.06] backdrop-blur-md p-4 rounded-3xl transition-all group shadow-xl ${
+              product.isAvailable === false ? "opacity-50 cursor-not-allowed" : "hover:border-brand-purple/30 cursor-pointer hover:shadow-2xl"
             }`}
           >
-            <div className="aspect-square bg-slate-700 rounded-2xl mb-4 overflow-hidden relative">
+            <div className="aspect-square bg-white/[0.03] border border-white/[0.06] rounded-2xl mb-4 overflow-hidden relative">
                {product.imageUrl ? (
                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" />
                ) : (
-                 <div className="w-full h-full flex items-center justify-center text-3xl opacity-20 italic">🍽️</div>
+                   <div className="w-full h-full flex items-center justify-center text-xs text-brand-gray font-semibold uppercase tracking-widest">
+                     Không có ảnh
+                   </div>
                )}
-               <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-black px-2 py-1 rounded-lg">
+               <div className="absolute top-2 right-2 bg-brand-purple text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-glow-purple">
                   {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
                </div>
                {product.isAvailable === false && (
-                 <div className="absolute inset-x-3 bottom-3 bg-slate-950/80 border border-white/10 text-white text-[10px] font-black px-3 py-2 rounded-xl uppercase tracking-widest text-center">
-                   Hết bán
-                 </div>
+                  <div className="absolute inset-x-3 bottom-3 bg-black/70 border border-white/[0.10] text-white text-[10px] font-black px-3 py-2 rounded-xl uppercase tracking-widest text-center">
+                    Hết bán
+                  </div>
                )}
             </div>
-            <h4 className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors uppercase text-sm tracking-tight">{product.name}</h4>
+            <h4 className="font-bold text-white group-hover:text-brand-purple transition-colors uppercase text-sm tracking-tight">{product.name}</h4>
           </div>
         ))}
       </div>

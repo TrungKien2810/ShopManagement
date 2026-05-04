@@ -35,5 +35,11 @@ export const tableApi = {
   checkout: async (id: string) => {
     const response = await apiClient.post(`/tables/${id}/checkout`);
     return response.data;
-  }
+  },
+
+  // Doi ban (chuyen don hang dang mo sang ban khac)
+  transfer: async (fromTableId: string, toTableId: string) => {
+    const response = await apiClient.post(`/tables/${fromTableId}/transfer/${toTableId}`);
+    return response.data as { orderId: string; fromTableId: string; toTableId: string; toTableName: string };
+  },
 };

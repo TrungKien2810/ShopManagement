@@ -6,6 +6,7 @@ public interface IUnitOfWork : IDisposable
     IOrderRepository Orders { get; }
     IProductRepository Products { get; }
     ICategoryRepository Categories { get; }
+    ITableAreaRepository TableAreas { get; }
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();

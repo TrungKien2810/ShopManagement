@@ -110,9 +110,9 @@ export const QROrderPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200">
-      <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-4">
-        <h1 className="text-xl font-black text-center text-emerald-500 uppercase tracking-widest">
+    <div className="min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30">
+      <header className="sticky top-0 z-40 bg-void/80 backdrop-blur-md border-b border-white/[0.05] p-4">
+        <h1 className="text-xl font-black text-center text-white uppercase tracking-widest">
           ZôOS QR ORDER
         </h1>
       </header>
@@ -128,10 +128,10 @@ export const QROrderPage: React.FC = () => {
 
         {/* Món đã gọi (Dành cho khách xem) */}
         {placedItems.length > 0 && (
-          <div className="mb-8 bg-slate-800/30 rounded-3xl p-6 border border-slate-700/50">
-            <h3 className="text-xs font-black text-slate-500 mb-4 uppercase tracking-widest flex justify-between">
+          <div className="mb-8 linear-card p-6">
+            <h3 className="text-xs font-black text-brand-gray mb-4 uppercase tracking-widest flex justify-between">
               <span>MÓN ĐÃ GỌI</span>
-              <span className="text-emerald-500">
+              <span className="text-white">
                 TỔNG:{" "}
                 {new Intl.NumberFormat("vi-VN", {
                   style: "currency",
@@ -184,13 +184,13 @@ export const QROrderPage: React.FC = () => {
           <button
             onClick={handleSubmitOrder}
             disabled={isOrdering}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 text-white p-6 rounded-3xl shadow-2xl shadow-emerald-900/40 flex justify-between items-center transition-all animate-bounceIn"
+            className="w-full btn-primary p-6 rounded-3xl flex justify-between items-center transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="flex flex-col items-start">
               <span className="text-xs font-bold opacity-80">
                 ĐÃ CHỌN {cart.length} MÓN
               </span>
-              <span className="text-lg font-black">
+              <span className="text-lg font-black text-white">
                 {new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",

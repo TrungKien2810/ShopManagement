@@ -18,6 +18,7 @@ public class MenuController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetMenu()
     {
         var menu = await _menuService.GetMenuAsync();
@@ -40,6 +41,14 @@ public class MenuController : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("categories/{id}")]
+    [Authorize(Policy = "RequireManager")]
+    public async Task<IActionResult> DeleteCategory(Guid id)
+    {
+        await _menuService.ArchiveCategoryAsync(id);
+        return NoContent();
+    }
+
     [HttpPost("products")]
     [Authorize(Policy = "RequireManager")]
     public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] CreateProductDto request)
@@ -54,5 +63,13 @@ public class MenuController : ControllerBase
     {
         var result = await _menuService.UpdateProductAsync(id, request);
         return Ok(result);
+    }
+
+    [HttpDelete("products/{id}")]
+    [Authorize(Policy = "RequireManager")]
+    public async Task<IActionResult> DeleteProduct(Guid id)
+    {
+        await _menuService.ArchiveProductAsync(id);
+        return NoContent();
     }
 }

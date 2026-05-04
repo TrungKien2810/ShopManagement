@@ -11,6 +11,8 @@ Muc dich: Moi khi co EF Core migration thay doi schema, phai append 1 muc vao da
 Template:
 - YYYY-MM-DD - Migration `<MigrationName>`: (Tables/Columns) + ly do nghiep vu + module lien quan + link toi plan/session neu co.
 
+- 2026-04-29 - Migration `<PENDING_AddTableAreas>`: Add table `TableAreas` and column `Tables.AreaId` to normalize table locations, support dropdown selection + create-new area (Module: Table Management).
+
 ---
 
 ## 1. Góc nhìn từ @Architect

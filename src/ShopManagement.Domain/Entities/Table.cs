@@ -10,7 +10,9 @@ public class Table : BaseEntity
     public int Capacity { get; set; }
     public TableStatus Status { get; set; } = TableStatus.Available;
     public string Location { get; set; } = string.Empty;
+    public Guid? AreaId { get; set; }
 
     // Navigation properties
     public virtual Shop Shop { get; set; } = null!;
+    public virtual TableArea? Area { get; set; }
 }

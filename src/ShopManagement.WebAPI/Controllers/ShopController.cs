@@ -134,10 +134,67 @@ public class ShopController : ControllerBase
             .Join(_context.Users, 
                   m => m.UserId, 
                   u => u.Id, 
-                  (m, u) => new { Username = u.UserName, Role = m.Role, JoinedAt = m.JoinedAt })
+                  (m, u) => new { UserId = u.Id, Username = u.UserName, Role = m.Role, JoinedAt = m.JoinedAt })
             .ToListAsync();
 
         return Ok(members);
+    }
+
+    [HttpPut("{shopId}/members/{userId}/role")]
+    public async Task<IActionResult> UpdateMemberRole(Guid shopId, string userId, [FromBody] UpdateMemberRoleRequest request)
+    {
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var currentMember = await _context.ShopMembers.FirstOrDefaultAsync(m => m.ShopId == shopId && m.UserId == currentUserId);
+        if (currentMember == null) return Forbid();
+        if (currentMember.Role != ShopRole.Owner && currentMember.Role != ShopRole.Manager) return Forbid();
+
+        var targetMember = await _context.ShopMembers.FirstOrDefaultAsync(m => m.ShopId == shopId && m.UserId == userId);
+        if (targetMember == null) return NotFound(new { Message = "Không tìm thấy thành viên." });
+
+        if (currentMember.Role == ShopRole.Manager)
+        {
+            if (targetMember.Role == ShopRole.Owner) return Forbid();
+            if (request.Role == ShopRole.Owner) return Forbid();
+        }
+
+        if (targetMember.Role == ShopRole.Owner && request.Role != ShopRole.Owner)
+        {
+            var ownerCount = await _context.ShopMembers.CountAsync(m => m.ShopId == shopId && m.Role == ShopRole.Owner);
+            if (ownerCount <= 1) return BadRequest(new { Message = "Không thể hạ quyền Owner cuối cùng của quán." });
+        }
+
+        targetMember.Role = request.Role;
+        targetMember.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { Message = "Cập nhật vai trò thành công." });
+    }
+
+    [HttpDelete("{shopId}/members/{userId}")]
+    public async Task<IActionResult> RemoveMember(Guid shopId, string userId)
+    {
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var currentMember = await _context.ShopMembers.FirstOrDefaultAsync(m => m.ShopId == shopId && m.UserId == currentUserId);
+        if (currentMember == null) return Forbid();
+        if (currentMember.Role != ShopRole.Owner && currentMember.Role != ShopRole.Manager) return Forbid();
+
+        var targetMember = await _context.ShopMembers.FirstOrDefaultAsync(m => m.ShopId == shopId && m.UserId == userId);
+        if (targetMember == null) return NotFound(new { Message = "Không tìm thấy thành viên." });
+
+        if (currentMember.Role == ShopRole.Manager && targetMember.Role == ShopRole.Owner) return Forbid();
+
+        if (targetMember.Role == ShopRole.Owner)
+        {
+            var ownerCount = await _context.ShopMembers.CountAsync(m => m.ShopId == shopId && m.Role == ShopRole.Owner);
+            if (ownerCount <= 1) return BadRequest(new { Message = "Không thể xóa Owner cuối cùng của quán." });
+        }
+
+        _context.ShopMembers.Remove(targetMember);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 
     [HttpGet("my-shops")]
@@ -155,3 +212,4 @@ public class ShopController : ControllerBase
 
 public record CreateShopRequest(string Name, string? Address, string? PhoneNumber, string? Description);
 public record InviteRequest(string Username, ShopRole Role);
+public record UpdateMemberRoleRequest(ShopRole Role);

@@ -13,6 +13,7 @@ import { ShopCreationPage } from "./pages/ShopCreationPage";
 import { Dashboard } from "./pages/Dashboard";
 import { QROrderPage } from "./pages/QROrderPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { MenuPage } from "./pages/MenuPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/menu" element={<MenuPage />} />
 
           {/* Public QR Order (No Login required, uses TableId) */}
           <Route path="/t/:tableId" element={<QROrderPage />} />

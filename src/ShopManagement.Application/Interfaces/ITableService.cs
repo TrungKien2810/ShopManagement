@@ -9,4 +9,5 @@ public interface ITableService
     Task ResetTableAsync(Guid tableId);
     Task<OpenTableResponse> OpenTableAsync(Guid tableId);
     Task CheckoutAsync(Guid tableId);
+    Task<TransferTableResponse> TransferTableAsync(Guid fromTableId, Guid toTableId);
 }

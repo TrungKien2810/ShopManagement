@@ -24,6 +24,14 @@ public class ProductRepository : IProductRepository
         return await _context.Products.Where(p => p.CategoryId == categoryId).ToListAsync();
     }
 
+    public async Task<IEnumerable<Product>> GetByCategoryIdsAsync(IEnumerable<Guid> categoryIds)
+    {
+        var ids = categoryIds.Distinct().ToList();
+        if (ids.Count == 0) return Array.Empty<Product>();
+
+        return await _context.Products.Where(p => ids.Contains(p.CategoryId)).ToListAsync();
+    }
+
     public async Task<Product?> GetByIdAsync(Guid id)
     {
         // Use LINQ so EF Core global query filters (ShopId) are applied.

@@ -3,19 +3,25 @@ import { MenuGrid } from './MenuGrid';
 import { OrderSidebar } from './OrderSidebar';
 import { orderApi } from '../api/orderApi';
 import { OrderItemStatus } from '../models/order';
+import { tableApi } from '../api/tableApi';
+import type { TableDto } from '../models/table';
+import { TransferTableModal } from './TransferTableModal';
 
 interface OrderPageProps {
   tableId: string;
   tableName: string;
   orderId: string;
   onClose: () => void;
+  onTransferred: (newTableId: string, newTableName: string) => void;
 }
 
-export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderId, onClose }) => {
+export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderId, onClose, onTransferred }) => {
   const [pendingItems, setPendingItems] = useState<any[]>([]);
   const [placedItems, setPlacedItems] = useState<any[]>([]);
   const [acceptedAmount, setAcceptedAmount] = useState<number>(0);
   const [needsApprovalCount, setNeedsApprovalCount] = useState<number>(0);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [tables, setTables] = useState<TableDto[]>([]);
 
   useEffect(() => {
     loadOrder();
@@ -28,7 +34,7 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
       setAcceptedAmount(order.acceptedAmount ?? 0);
       setNeedsApprovalCount(order.needsApprovalCount ?? 0);
     } catch (err) {
-      console.error("Không thể tải đơn hàng", err);
+      console.error("Could not load order", err);
     }
   };
 
@@ -57,9 +63,9 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
       }
       setPendingItems([]);
       loadOrder();
-      alert("Đã gửi đơn hàng đến nhà bếp!");
+      alert("Order sent to kitchen!");
     } catch (err) {
-      alert("Có lỗi khi gửi đơn hàng. Kiểm tra kết nối!");
+      alert("Error sending order. Check your connection!");
     }
   };
 
@@ -68,8 +74,22 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
       await orderApi.approveItem(orderId, productId);
       loadOrder();
     } catch (err) {
-      alert("Không thể duyệt món.");
+      alert("Could not approve item.");
     }
+  };
+
+  const loadTables = async () => {
+    try {
+      const data = await tableApi.getAll();
+      setTables(data || []);
+    } catch (err) {
+      console.error("Could not load table list", err);
+    }
+  };
+
+  const handleTransfer = async (toTableId: string) => {
+    const result = await tableApi.transfer(tableId, toTableId);
+    onTransferred(result.toTableId, result.toTableName);
   };
 
   return (
@@ -80,32 +100,43 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
            <div className="flex justify-between items-center">
               <div>
                  <h2 className="text-4xl font-black text-slate-100 mb-1">{tableName}</h2>
-                 <p className="text-slate-500 font-bold uppercase tracking-wider text-xs">Thực đơn ZôOS sành điệu</p>
+                 <p className="text-slate-500 font-bold uppercase tracking-wider text-xs">ZOS dining menu</p>
                  <div className="mt-4 flex flex-wrap gap-3">
                    <div className="bg-slate-900/40 border border-slate-800 rounded-2xl px-4 py-3">
-                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tạm tính (đã nhận)</div>
+                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Temporary total (accepted)</div>
                      <div className="text-lg font-black text-emerald-400">
                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(acceptedAmount)}
                      </div>
                    </div>
                    <div className="bg-slate-900/40 border border-slate-800 rounded-2xl px-4 py-3">
-                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Chờ duyệt</div>
+                     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pending approval</div>
                      <div className="text-lg font-black text-orange-400">{needsApprovalCount}</div>
                    </div>
                  </div>
               </div>
-              <button 
-                onClick={onClose}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-400 p-4 rounded-3xl border border-slate-700 transition-all font-black"
-              >
-                QUAY LẠI
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    void loadTables();
+                    setShowTransferModal(true);
+                  }}
+                  className="bg-slate-900/40 hover:bg-slate-900/60 text-slate-200 px-4 py-3 rounded-3xl border border-slate-800 transition-all font-black text-xs min-h-12"
+                >
+                  CHANGE TABLE
+                </button>
+                <button 
+                  onClick={onClose}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-400 p-4 rounded-3xl border border-slate-700 transition-all font-black"
+                >
+                  BACK
+                </button>
+              </div>
            </div>
 
            {/* Placed Order Items Section */}
            {placedItems.length > 0 && (
              <div className="bg-slate-800/20 rounded-3xl p-6 border border-slate-700/50">
-                <h3 className="text-lg font-black text-slate-300 mb-4 uppercase tracking-widest">Món Đã Gọi</h3>
+                <h3 className="text-lg font-black text-slate-300 mb-4 uppercase tracking-widest">Ordered Items</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {placedItems.map((item, idx) => (
                     <div key={idx} className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
@@ -119,7 +150,7 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
                               onClick={() => handleApproveItem(item.productId)}
                               className="bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-lg hover:bg-orange-400 transition-all shadow-lg shadow-orange-900/20"
                             >
-                              DUYỆT
+                              APPROVE
                             </button>
                           )}
                           <span className={`text-[10px] font-black px-2 py-1 rounded-md ${
@@ -127,7 +158,7 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
                             item.status === OrderItemStatus.Cancelled ? 'bg-slate-700 text-slate-400' :
                             'bg-emerald-500/10 text-emerald-500'
                           }`}>
-                            {item.status === OrderItemStatus.NeedsApproval ? 'CHỜ DUYỆT' : item.status === OrderItemStatus.Cancelled ? 'ĐÃ HỦY' : 'OK'}
+                            {item.status === OrderItemStatus.NeedsApproval ? 'PENDING' : item.status === OrderItemStatus.Cancelled ? 'CANCELLED' : 'OK'}
                           </span>
                        </div>
                     </div>
@@ -146,6 +177,15 @@ export const OrderPage: React.FC<OrderPageProps> = ({ tableId, tableName, orderI
         onConfirm={handleConfirmOrder} 
         onRemove={handleRemoveItem}
       />
+
+      {showTransferModal && (
+        <TransferTableModal
+          fromTableId={tableId}
+          tables={tables}
+          onClose={() => setShowTransferModal(false)}
+          onConfirm={handleTransfer}
+        />
+      )}
     </div>
   );
 };
