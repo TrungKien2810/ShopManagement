@@ -6,6 +6,7 @@ public class OrderDto
 {
     public Guid Id { get; set; }
     public Guid TableId { get; set; }
+    public Guid? BranchId { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal AcceptedAmount { get; set; }
     public int NeedsApprovalCount { get; set; }
@@ -15,11 +16,17 @@ public class OrderDto
 
 public class OrderItemDto
 {
+    public Guid Id { get; set; }
     public Guid ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public OrderItemStatus Status { get; set; }
+}
+
+public class CreateOrderRequest
+{
+    public Guid TableId { get; set; }
 }
 
 public class AddOrderItemRequest

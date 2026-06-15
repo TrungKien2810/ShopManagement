@@ -9,5 +9,6 @@ public interface ITableAreaRepository
     Task AddAsync(TableArea area);
     Task UpdateAsync(TableArea area);
     Task DeleteAsync(TableArea area);
+    Task HardDeleteAsync(TableArea area);
 }
 

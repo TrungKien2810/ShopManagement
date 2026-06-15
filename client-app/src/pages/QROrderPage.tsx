@@ -4,6 +4,7 @@ import { MenuGrid } from "../components/MenuGrid";
 import { orderApi } from "../api/orderApi";
 import { useSignalR } from "../hooks/useSignalR";
 import { OrderItemStatus } from "../models/order";
+import { PaymentButton } from "../components/ui";
 
 export const QROrderPage: React.FC = () => {
   const { tableId } = useParams<{ tableId: string }>();
@@ -109,15 +110,17 @@ export const QROrderPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30">
-      <header className="sticky top-0 z-40 bg-void/80 backdrop-blur-md border-b border-white/[0.05] p-4">
-        <h1 className="text-xl font-black text-center text-white uppercase tracking-widest">
-          ZôOS QR ORDER
-        </h1>
-      </header>
+  const handlePaymentSuccess = () => {
+    setMessage({
+      text: "Thanh toán thành công! Cảm ơn quý khách.",
+      type: "success",
+    });
+    // Refresh order or redirect
+    loadActiveOrder();
+  };
 
-      <main className="p-4 pb-32 max-w-lg mx-auto">
+  return (
+    <div className="pb-32 max-w-lg mx-auto">
         {message && (
           <div
             className={`p-4 rounded-2xl mb-4 text-sm font-bold animate-slideIn ${message.type === "success" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
@@ -129,16 +132,24 @@ export const QROrderPage: React.FC = () => {
         {/* Món đã gọi (Dành cho khách xem) */}
         {placedItems.length > 0 && (
           <div className="mb-8 linear-card p-6">
-            <h3 className="text-xs font-black text-brand-gray mb-4 uppercase tracking-widest flex justify-between">
-              <span>MÓN ĐÃ GỌI</span>
-              <span className="text-white">
-                TỔNG:{" "}
-                {new Intl.NumberFormat("vi-VN", {
-                  style: "currency",
-                  currency: "VND",
-                }).format(acceptedAmount)}
-              </span>
-            </h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xs font-black text-brand-gray uppercase tracking-widest">
+                MÓN ĐÃ GỌI
+              </h3>
+              <div className="flex items-center gap-4">
+                <span className="text-white font-bold">
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(acceptedAmount)}
+                </span>
+                <PaymentButton 
+                  totalAmount={acceptedAmount} 
+                  onPaymentSuccess={handlePaymentSuccess} 
+                  className="scale-90 origin-right"
+                />
+              </div>
+            </div>
             <div className="space-y-3">
               {placedItems.map((item, idx) => (
                 <div
@@ -175,8 +186,8 @@ export const QROrderPage: React.FC = () => {
           </div>
         )}
 
+
         <MenuGrid onSelectItem={handleAddToOrder} />
-      </main>
 
       {/* Cart Summary */}
       {cart.length > 0 && (

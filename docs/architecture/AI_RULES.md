@@ -28,6 +28,7 @@ Chi doc them tai lieu goc khi:
 - DB schema: `docs/architecture/database_schema.md`
 - Role simulation: `docs/architecture/roles_simulation.md`
 - Roadmap/PRD: `docs/requirements/MASTER_ROADMAP.md`, `docs/requirements/PRD_Core_MVP.md`
+*Ghi chú: Bất kể khi nào 1 file Kế hoạch `.md` mới sinh ra hoặc được chốt, Agent có trách nhiệm ghi danh tính năng đó vào MASTER_ROADMAP.md nếu cần thiết.*
 - Module docs (doc truoc khi sua module tuong ung): `docs/modules/*.md`
 
 ## 4) Quy uoc luu tai lieu (docs/)

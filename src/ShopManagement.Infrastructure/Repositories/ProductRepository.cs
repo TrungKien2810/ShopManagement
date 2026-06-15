@@ -1,3 +1,4 @@
+using System;
 using ShopManagement.Application.Interfaces;
 using ShopManagement.Domain.Entities;
 using ShopManagement.Infrastructure.Data;
@@ -17,6 +18,30 @@ public class ProductRepository : IProductRepository
     public async Task<IEnumerable<Product>> GetAllAsync()
     {
         return await _context.Products.Include(p => p.Category).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Product>> GetGlobalAsync()
+    {
+        return await _context.Products
+            .Where(p => p.BranchId == null)
+            .Include(p => p.Category)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Product>> GetByBranchIdAsync(Guid branchId)
+    {
+        return await _context.Products
+            .Where(p => p.BranchId == branchId)
+            .Include(p => p.Category)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Product>> GetCombinedByBranchIdAsync(Guid branchId)
+    {
+        return await _context.Products
+            .Where(p => p.BranchId == null || p.BranchId == branchId)
+            .Include(p => p.Category)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Product>> GetByCategoryIdAsync(Guid categoryId)
@@ -50,6 +75,15 @@ public class ProductRepository : IProductRepository
     }
 
     public async Task DeleteAsync(Product product)
+    {
+        // Soft-delete: mark as deleted and set DeletedAt
+        product.IsDeleted = true;
+        product.DeletedAt = DateTime.UtcNow;
+        _context.Products.Update(product);
+        await Task.CompletedTask;
+    }
+
+    public async Task RemoveAsync(Product product)
     {
         _context.Products.Remove(product);
         await Task.CompletedTask;

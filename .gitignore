@@ -18,3 +18,12 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Runtime diagnostic logs
+diagnostic_log.txt
+
+# Design tooling (local-only): cloned skill repos & auto-generated GDS docs.
+# Source of truth for UI is DESIGN.md + client-app/src/index.css (@theme).
+design-skills/
+design-system/
+clone_design_skills.ps1

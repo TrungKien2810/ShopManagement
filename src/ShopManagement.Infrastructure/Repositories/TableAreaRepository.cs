@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using ShopManagement.Application.Interfaces;
 using ShopManagement.Domain.Entities;
@@ -42,6 +43,15 @@ public class TableAreaRepository : ITableAreaRepository
     }
 
     public async Task DeleteAsync(TableArea area)
+    {
+        // Soft-delete: mark as deleted and set DeletedAt
+        area.IsDeleted = true;
+        area.DeletedAt = DateTime.UtcNow;
+        _context.TableAreas.Update(area);
+        await Task.CompletedTask;
+    }
+
+    public async Task HardDeleteAsync(TableArea area)
     {
         _context.TableAreas.Remove(area);
         await Task.CompletedTask;

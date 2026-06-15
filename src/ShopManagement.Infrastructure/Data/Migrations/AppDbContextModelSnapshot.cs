@@ -199,19 +199,61 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("ShopManagement.Domain.Entities.Branch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopId");
+
+                    b.ToTable("Branches");
+                });
+
             modelBuilder.Entity("ShopManagement.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -227,6 +269,8 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("ShopId");
 
                     b.ToTable("Categories");
@@ -236,6 +280,9 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BranchId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CheckInTime")
@@ -270,6 +317,8 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("ShopId");
 
@@ -330,16 +379,66 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("ShopManagement.Domain.Entities.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ShopId");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("ShopManagement.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
@@ -349,6 +448,9 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -366,6 +468,8 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("CategoryId");
 
@@ -446,11 +550,23 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AreaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -473,9 +589,53 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AreaId");
+
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("ShopId");
 
                     b.ToTable("Tables");
+                });
+
+            modelBuilder.Entity("ShopManagement.Domain.Entities.TableArea", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("TableAreas");
                 });
 
             modelBuilder.Entity("ShopManagement.Infrastructure.Identity.ApplicationUser", b =>
@@ -529,9 +689,6 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<int>("RegistrationIntent")
-                        .HasColumnType("int");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -607,10 +764,10 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ShopManagement.Domain.Entities.Category", b =>
+            modelBuilder.Entity("ShopManagement.Domain.Entities.Branch", b =>
                 {
                     b.HasOne("ShopManagement.Domain.Entities.Shop", "Shop")
-                        .WithMany("Categories")
+                        .WithMany("Branches")
                         .HasForeignKey("ShopId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -618,8 +775,31 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                     b.Navigation("Shop");
                 });
 
+            modelBuilder.Entity("ShopManagement.Domain.Entities.Category", b =>
+                {
+                    b.HasOne("ShopManagement.Domain.Entities.Branch", "Branch")
+                        .WithMany("Categories")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ShopManagement.Domain.Entities.Shop", "Shop")
+                        .WithMany("Categories")
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Shop");
+                });
+
             modelBuilder.Entity("ShopManagement.Domain.Entities.Order", b =>
                 {
+                    b.HasOne("ShopManagement.Domain.Entities.Branch", "Branch")
+                        .WithMany("Orders")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ShopManagement.Domain.Entities.Shop", "Shop")
                         .WithMany()
                         .HasForeignKey("ShopId")
@@ -631,6 +811,8 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .HasForeignKey("TableId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Branch");
 
                     b.Navigation("Shop");
 
@@ -664,8 +846,32 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                     b.Navigation("Shop");
                 });
 
+            modelBuilder.Entity("ShopManagement.Domain.Entities.Payment", b =>
+                {
+                    b.HasOne("ShopManagement.Domain.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShopManagement.Domain.Entities.Shop", "Shop")
+                        .WithMany()
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Shop");
+                });
+
             modelBuilder.Entity("ShopManagement.Domain.Entities.Product", b =>
                 {
+                    b.HasOne("ShopManagement.Domain.Entities.Branch", "Branch")
+                        .WithMany("SpecificProducts")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ShopManagement.Domain.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
@@ -677,6 +883,8 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .HasForeignKey("ShopId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Branch");
 
                     b.Navigation("Category");
 
@@ -702,13 +910,49 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Table", b =>
                 {
+                    b.HasOne("ShopManagement.Domain.Entities.TableArea", "Area")
+                        .WithMany("Tables")
+                        .HasForeignKey("AreaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ShopManagement.Domain.Entities.Branch", "Branch")
+                        .WithMany("Tables")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ShopManagement.Domain.Entities.Shop", "Shop")
                         .WithMany("Tables")
                         .HasForeignKey("ShopId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Area");
+
+                    b.Navigation("Branch");
+
                     b.Navigation("Shop");
+                });
+
+            modelBuilder.Entity("ShopManagement.Domain.Entities.TableArea", b =>
+                {
+                    b.HasOne("ShopManagement.Domain.Entities.Shop", "Shop")
+                        .WithMany()
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Shop");
+                });
+
+            modelBuilder.Entity("ShopManagement.Domain.Entities.Branch", b =>
+                {
+                    b.Navigation("Categories");
+
+                    b.Navigation("Orders");
+
+                    b.Navigation("SpecificProducts");
+
+                    b.Navigation("Tables");
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Category", b =>
@@ -723,12 +967,19 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Shop", b =>
                 {
+                    b.Navigation("Branches");
+
                     b.Navigation("Categories");
 
                     b.Navigation("Members");
 
                     b.Navigation("Products");
 
+                    b.Navigation("Tables");
+                });
+
+            modelBuilder.Entity("ShopManagement.Domain.Entities.TableArea", b =>
+                {
                     b.Navigation("Tables");
                 });
 

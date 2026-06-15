@@ -1,29 +1,80 @@
+/* Display: Fraunces (characterful serif, premium F&B feel) + Body: Plus Jakarta Sans */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
+/*
+ * ─────────────────────────────────────────────────────────────
+ *  "EMBER BISTRO" DESIGN SYSTEM
+ *  Warm espresso-dark theme · terracotta/ember + saffron-amber.
+ *  Intentional, appetite-driven aesthetic for an F&B / POS app.
+ *  (Replaces the old cold "Linear purple" direction.)
+ *
+ *  NOTE: legacy token names are kept (e.g. --color-brand-purple)
+ *  so the whole app re-skins via these values without touching
+ *  every component. The *meaning* changed, not the class names.
+ * ─────────────────────────────────────────────────────────────
+ */
 @theme {
-  --color-brand-purple: #5e6ad2;
-  --color-brand-emerald: #10b981;
-  --color-brand-gray: #8a8f98;
-  
-  --color-void: #000212;
-  --color-slate-deep: #08090a;
-  
-  --shadow-linear: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-  --shadow-glow-purple: 0 0 15px -3px rgba(94, 106, 210, 0.3);
+  /* Primary = deep ember/terracotta (white text stays legible on it) */
+  --color-brand-purple: #c2410c; /* PRIMARY ember (was purple) */
+  --color-brand-purple-light: #f4b541; /* bright saffron-amber highlight */
+  --color-brand-orange: #ea7a3c; /* warm orange accent */
+  --color-brand-emerald: #2fb97a; /* success / money / available */
+  --color-brand-gray: #9b938b; /* warm muted text */
 
-  --animate-shimmer: shimmer 2s linear infinite;
+  /* Explicit, well-named aliases for new code */
+  --color-ember: #c2410c;
+  --color-ember-bright: #e2562a;
+  --color-amber: #f4b541;
+  --color-clay: #9a3412;
+
+  /* Warm espresso surfaces (were cold #000212 / #08090a) */
+  --color-void: #0c0a09; /* warm near-black background */
+  --color-slate-deep: #18130f; /* warm charcoal surface */
+
+  --shadow-linear: 0 14px 48px -14px rgba(0, 0, 0, 0.65);
+  --shadow-glow-purple: 0 0 24px -4px rgba(244, 181, 65, 0.32); /* warm amber glow */
+  --shadow-glow-ember: 0 0 26px -5px rgba(194, 65, 12, 0.45);
+
+  /* Warm-tinted border tokens */
+  --color-border-subtle: rgba(255, 240, 224, 0.05);
+  --color-border-normal: rgba(255, 240, 224, 0.09);
+  --color-border-bright: rgba(244, 181, 65, 0.22);
+
+  --font-display: "Fraunces", "Georgia", serif;
+
+  --animate-shimmer: shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 :root {
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
-  letter-spacing: -0.01em;
-  background-color: #000212;
-  color: #f7f8f8;
+  font-family:
+    "Plus Jakarta Sans",
+    -apple-system,
+    system-ui,
+    sans-serif;
+  letter-spacing: -0.011em;
+  background-color: #0c0a09;
+  color: #f6f1ea;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -31,51 +82,114 @@ body {
   margin: 0;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Dark subtle gradient signature of Linear */
-  background-image: 
-    radial-gradient(circle at 50% -20%, rgba(94, 106, 210, 0.1) 0%, transparent 80%),
-    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.02) 0%, transparent 50%);
+  /* Warm gradient mesh — ember + amber glow, a hint of emerald */
+  background-image:
+    radial-gradient(
+      circle at 50% -12%,
+      rgba(244, 181, 65, 0.1) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(194, 65, 12, 0.08) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      rgba(47, 185, 122, 0.04) 0%,
+      transparent 42%
+    );
+  background-attachment: fixed;
 }
 
-/* Linear-style Surface Utilities */
+/* Film-grain atmosphere overlay (subtle, non-blocking) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Warm Surface Utilities */
 .linear-surface {
-  @apply bg-[#08090a] border border-white/[0.08] shadow-lg rounded-xl;
+  @apply bg-slate-deep border border-border-normal shadow-linear rounded-xl;
 }
 
 .linear-card {
-  @apply bg-[#08090a]/40 border border-white/[0.06] backdrop-blur-md rounded-xl transition-all hover:bg-[#08090a]/60 hover:border-white/[0.12] hover:shadow-2xl;
+  @apply bg-slate-deep/50 border border-border-subtle backdrop-blur-md rounded-2xl transition-all duration-300;
+  @apply hover:bg-slate-deep/70 hover:border-border-bright hover:shadow-glow-purple;
 }
 
-/* Typography Precision */
-h1, h2, h3, h4 {
+/* Skeleton & Loading */
+.skeleton-shimmer {
+  @apply relative overflow-hidden bg-white/[0.03] rounded-md;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  @apply absolute inset-0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(244, 181, 65, 0.06) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* Masking Utilities */
+.mask-fade-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+/* Typography — Fraunces display headings give warmth + character */
+h1,
+h2,
+h3,
+h4 {
   @apply font-bold tracking-tight text-white;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
 }
 
 .text-muted {
-  @apply text-[#8a8f98] font-medium;
+  @apply text-brand-gray font-medium;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-[#000212];
+  @apply bg-void;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/[0.1] rounded-full hover:bg-white/[0.15];
+  @apply bg-white/[0.08] rounded-full hover:bg-amber/30 transition-colors;
 }
 
 /* Buttons */
 .btn-primary {
-  @apply bg-[#5e6ad2] hover:bg-[#6e7be2] text-white px-5 py-2 rounded-lg font-bold transition-all shadow-[0_0_15px_-3px_rgba(94,106,210,0.3)] active:scale-95;
+  @apply relative overflow-hidden text-white px-5 py-2.5 rounded-xl font-bold transition-all;
+  background-image: linear-gradient(135deg, #d9531a 0%, #c2410c 100%);
+  @apply shadow-[0_8px_24px_-8px_rgba(194,65,12,0.6)] active:scale-95 hover:brightness-110 focus:ring-2 focus:ring-amber/50 outline-none;
 }
 
 .btn-secondary {
-  @apply bg-transparent hover:bg-white/[0.04] border border-white/[0.08] text-white px-5 py-2 rounded-lg font-bold transition-all active:scale-95;
+  @apply bg-transparent hover:bg-white/[0.04] border border-border-normal text-white px-5 py-2.5 rounded-xl font-bold transition-all;
+  @apply active:scale-95 hover:border-border-bright focus:ring-2 focus:ring-amber/25 outline-none;
 }
 
 /* Modals */
 .modal-backdrop {
-  @apply fixed inset-0 bg-[#08090a]/80 backdrop-blur-md z-50 flex items-center justify-center p-4;
+  @apply fixed inset-0 bg-void/80 backdrop-blur-xl z-50 flex items-center justify-center p-4;
 }

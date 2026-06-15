@@ -10,6 +10,7 @@ public class Shop : BaseEntity
     public string OwnerId { get; set; } = string.Empty;
     
     // Navigation properties
+    public virtual ICollection<Branch> Branches { get; set; } = new List<Branch>();
     public virtual ICollection<Table> Tables { get; set; } = new List<Table>();
     public virtual ICollection<ShopMember> Members { get; set; } = new List<ShopMember>();
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();

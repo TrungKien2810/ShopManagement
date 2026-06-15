@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private IProductRepository? _productRepository;
     private ICategoryRepository? _categoryRepository;
     private ITableAreaRepository? _tableAreaRepository;
+    private IPaymentRepository? _paymentRepository;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -22,6 +23,7 @@ public class UnitOfWork : IUnitOfWork
     public IProductRepository Products => _productRepository ??= new ProductRepository(_context);
     public ICategoryRepository Categories => _categoryRepository ??= new CategoryRepository(_context);
     public ITableAreaRepository TableAreas => _tableAreaRepository ??= new TableAreaRepository(_context);
+    public IPaymentRepository Payments => _paymentRepository ??= new PaymentRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

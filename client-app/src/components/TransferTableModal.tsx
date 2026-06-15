@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRightLeft, X, AlertCircle, Loader2, MoveRight } from "lucide-react";
 import type { TableDto } from "../models/table";
 import { TableStatus } from "../models/table";
-import { cn } from "../lib/utils";
+ 
 import { LinearSelect } from "./LinearSelect";
 
 interface TransferTableModalProps {

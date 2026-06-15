@@ -19,9 +19,9 @@ public class TablesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TableDto>>> Get()
+    public async Task<ActionResult<IEnumerable<TableDto>>> Get([FromQuery] Guid? branchId = null)
     {
-        var result = await _tableService.GetAllTablesAsync();
+        var result = await _tableService.GetAllTablesAsync(branchId);
         return Ok(result);
     }
 
@@ -53,13 +53,13 @@ public class TablesController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/checkout")]
-    public async Task<IActionResult> Checkout(Guid id)
+    [HttpPost("{id}/transfer/{toId}")]
+    public async Task<ActionResult<TransferTableResponse>> TransferTable(Guid id, Guid toId)
     {
         try
         {
-            await _tableService.CheckoutAsync(id);
-            return Ok(new { message = "Thanh toán thành công." });
+            var result = await _tableService.TransferTableAsync(id, toId);
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -67,17 +67,17 @@ public class TablesController : ControllerBase
         }
     }
 
-    [HttpPost("{fromId}/transfer/{toId}")]
-    public async Task<ActionResult<TransferTableResponse>> TransferTable(Guid fromId, Guid toId)
+    [HttpPut("{id}")]
+    public async Task<ActionResult<TableDto>> UpdateTable(Guid id, [FromBody] ShopManagement.Application.DTOs.Table.CreateTableDto request)
     {
-        try
-        {
-            var result = await _tableService.TransferTableAsync(fromId, toId);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _tableService.UpdateTableAsync(id, request);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTable(Guid id)
+    {
+        await _tableService.DeleteTableAsync(id);
+        return NoContent();
     }
 }

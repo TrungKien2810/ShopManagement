@@ -46,4 +46,33 @@ public class OrderRepository : IOrderRepository
     {
         await _context.OrderItems.AddAsync(item);
     }
+
+    public async Task RemoveOrderItemAsync(OrderItem item)
+    {
+        _context.OrderItems.Remove(item);
+        await Task.CompletedTask;
+    }
+
+    public async Task<bool> ExistsOrderItemForProductAsync(Guid productId)
+    {
+        return await _context.OrderItems.AnyAsync(oi => oi.ProductId == productId);
+    }
+
+    public async Task<List<Order>> GetPaidOrdersAsync(Guid shopId, Guid? branchId, DateTime fromUtc, DateTime toUtc)
+    {
+        var query = _context.Orders
+            .AsNoTracking()
+            .Where(o => o.ShopId == shopId
+                        && o.Status == ShopManagement.Domain.Enums.OrderStatus.Paid
+                        && o.CheckOutTime != null
+                        && o.CheckOutTime >= fromUtc
+                        && o.CheckOutTime < toUtc);
+
+        if (branchId.HasValue)
+        {
+            query = query.Where(o => o.BranchId == branchId.Value);
+        }
+
+        return await query.ToListAsync();
+    }
 }

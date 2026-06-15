@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { shopApi } from '../api/shopApi';
+import { toast } from 'sonner';
 
 export const ShopCreationPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export const ShopCreationPage: React.FC = () => {
         address: formData.address,
         phoneNumber: formData.phoneNumber
       });
-      alert('Tạo quán thành công!');
+      toast.success('Tạo quán thành công!');
       navigate('/shops');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Không thể tạo quán. Hãy thử lại!');
@@ -71,7 +72,7 @@ export const ShopCreationPage: React.FC = () => {
               <input 
                 name="name"
                 type="text" 
-                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm font-semibold"
+                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#3d342c] text-sm font-semibold"
                 placeholder="Ví dụ: Zô Zô Quán"
                 value={formData.name}
                 onChange={handleChange}
@@ -84,7 +85,7 @@ export const ShopCreationPage: React.FC = () => {
               <input 
                 name="address"
                 type="text" 
-                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm font-semibold"
+                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#3d342c] text-sm font-semibold"
                 placeholder="123 Đường ABC, Quận XYZ..."
                 value={formData.address}
                 onChange={handleChange}
@@ -97,7 +98,7 @@ export const ShopCreationPage: React.FC = () => {
               <input 
                 name="phoneNumber"
                 type="text" 
-                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-sm font-semibold"
+                className="w-full px-5 py-4 bg-black/40 border border-white/[0.08] rounded-xl focus:border-brand-purple outline-none transition-all placeholder:text-[#3d342c] text-sm font-semibold"
                 placeholder="090x xxx xxx"
                 value={formData.phoneNumber}
                 onChange={handleChange}

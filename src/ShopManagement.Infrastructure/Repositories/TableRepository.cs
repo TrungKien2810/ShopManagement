@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using ShopManagement.Application.Interfaces;
 using ShopManagement.Domain.Entities;
@@ -14,9 +15,22 @@ public class TableRepository : ITableRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Table>> GetAllAsync()
+    public async Task<IEnumerable<Table>> GetAllAsync(Guid? branchId = null)
     {
-        return await _context.Tables.ToListAsync();
+        var query = _context.Tables.Include(t => t.Area).AsQueryable();
+        if (branchId.HasValue)
+        {
+            query = query.Where(t => t.BranchId == branchId.Value);
+        }
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Table>> GetByAreaIdAsync(Guid areaId)
+    {
+        return await _context.Tables
+            .Where(t => t.AreaId == areaId)
+            .ToListAsync();
     }
 
     public async Task<Table?> GetByIdAsync(Guid id)
@@ -43,7 +57,16 @@ public class TableRepository : ITableRepository
         var table = await _context.Tables.FirstOrDefaultAsync(t => t.Id == id);
         if (table != null)
         {
-            _context.Tables.Remove(table);
+            // Soft-delete: mark as deleted and set DeletedAt
+            table.IsDeleted = true;
+            table.DeletedAt = DateTime.UtcNow;
+            _context.Tables.Update(table);
         }
+    }
+
+    public async Task HardDeleteAsync(Table table)
+    {
+        _context.Tables.Remove(table);
+        await Task.CompletedTask;
     }
 }

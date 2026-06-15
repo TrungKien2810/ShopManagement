@@ -14,32 +14,46 @@ import { Dashboard } from "./pages/Dashboard";
 import { QROrderPage } from "./pages/QROrderPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { MenuPage } from "./pages/MenuPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { BranchListPage } from "./pages/BranchListPage";
+
+import { Toaster } from "sonner";
+import { MainLayout } from "./components/layout/MainLayout";
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster theme="dark" position="top-right" richColors />
       <Router>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/menu" element={<MenuPage />} />
+          {/* Public Routes with minimal layout */}
+          <Route path="/" element={<MainLayout showSidebar={false}><LandingPage /></MainLayout>} />
+          <Route path="/login" element={<MainLayout showSidebar={false}><LoginPage /></MainLayout>} />
+          <Route path="/register" element={<MainLayout showSidebar={false}><RegisterPage /></MainLayout>} />
+          <Route path="/menu" element={<MainLayout showSidebar={false}><MenuPage /></MainLayout>} />
 
-          {/* Public QR Order (No Login required, uses TableId) */}
-          <Route path="/t/:tableId" element={<QROrderPage />} />
+          {/* Public QR Order */}
+          <Route path="/t/:tableId" element={<MainLayout showSidebar={false}><QROrderPage /></MainLayout>} />
 
           {/* Cần đăng nhập nhưng chưa cần chọn quán */}
           <Route element={<ProtectedRoute requireShop={false} />}>
-            <Route path="/shops" element={<ShopListPage />} />
-            <Route path="/create-shop" element={<ShopCreationPage />} />
+            <Route path="/shops" element={<MainLayout><ShopListPage /></MainLayout>} />
+            <Route path="/create-shop" element={<MainLayout><ShopCreationPage /></MainLayout>} />
           </Route>
 
           {/* Cần đăng nhập VÀ đã chọn quán */}
           <Route element={<ProtectedRoute requireShop={true} />}>
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/shop/:shopId/branches" element={<MainLayout><BranchListPage /></MainLayout>} />
+            <Route path="/shop/:shopId/settings" element={<MainLayout><SettingsPage /></MainLayout>} />
+            
+            <Route path="/branch/:branchId" element={<MainLayout><Dashboard /></MainLayout>} />
+            <Route path="/branch/:branchId/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+            <Route path="/branch/:branchId/tables" element={<MainLayout><Dashboard /></MainLayout>} />
+            <Route path="/branch/:branchId/employees" element={<MainLayout><Dashboard /></MainLayout>} />
+            <Route path="/branch/:branchId/menu" element={<MainLayout><MenuPage /></MainLayout>} />
           </Route>
 
-          {/* Mặc định chuyển về Dashboard nếu không khớp */}
+          {/* Mặc định chuyển về Landing Page nếu không khớp */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

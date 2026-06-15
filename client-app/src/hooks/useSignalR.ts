@@ -7,7 +7,16 @@ export const useSignalR = (url: string, onConnected?: (connection: signalR.HubCo
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(url)
+      .withUrl(url, {
+        accessTokenFactory: () => {
+          const userStr = localStorage.getItem("zoos_user");
+          if (userStr) {
+            const user = JSON.parse(userStr);
+            return user.token;
+          }
+          return "";
+        }
+      })
       .withAutomaticReconnect()
       .build();
 

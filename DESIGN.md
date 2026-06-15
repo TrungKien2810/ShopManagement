@@ -49,4 +49,35 @@ Hệ thống thiết kế cho ZôOS dựa trên phong cách Linear: Tối giản
 - **Lớp 2**: Popovers, Tooltips (Đổ bóng rộng).
 
 ---
-*Bản thiết kế này được tạo ra dựa trên cảm hứng từ Linear.app để tối ưu hóa AI Generation.*
+
+## 7. Micro-interactions & Motion (Linear Precision)
+Hệ thống chuyển động phải tạo cảm giác phản hồi tức thì và mượt mà (Snappy & Fluid).
+- **Hover Transitions**: Sử dụng `transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1)`.
+- **Button Click**: Hiệu ứng `active: scale(0.98)` để tạo cảm giác cơ học.
+- **Modal Animation**: Sử dụng `spring` physics từ Framer Motion (stiffness: 300, damping: 30). Pop-up nhẹ từ dưới lên.
+- **List Item**: Hiệu ứng nhấn mạnh (highlight) tinh tế khi di chuột qua, thay đổi nhẹ opacity của viền.
+
+## 8. Form Behaviors & Validation
+- **Focus State**: Sử dụng viền `Linear Purple` rực rỡ kèm `ring-2 ring-purple-500/20`. Tuyệt đối không dùng outline mặc định.
+- **Inline Validation**: Thông báo lỗi xuất hiện ngay dưới input với màu `Rose 400`, font size 12px, có hiệu ứng slide-down nhẹ.
+- **Input Groups**: Nhóm các thông tin liên quan bằng các separator (vạch chia) 1px mờ.
+- **Empty Fields**: Sử dụng placeholder màu `Ghost Gray` với độ mờ cao (opacity 0.4).
+
+## 9. Empty & Loading States
+- **Empty States**: Sử dụng icon `Lucide` kích thước lớn (48px) màu `Ghost Gray`, kèm tiêu đề ngắn gọn và một nút CTA (Call to Action) chính giữa màn hình.
+- **Loading Skeleton**: Sử dụng hiệu ứng `shimmer` (quét sáng) cho các card và bảng dữ liệu thay vì Spinner truyền thống.
+- **Progressive Loading**: Hiển thị khung layout trước, sau đó mới nạp dữ liệu.
+
+## 10. Accessibility (A11y)
+- **Contrast**: Đảm bảo độ tương phản văn bản tối thiểu 4.5:1 (chuẩn WCAG AA).
+- **Focus Trap**: Đảm bảo người dùng sử dụng phím Tab không bị "thoát" khỏi Modal khi nó đang mở.
+- **Aria Labels**: Cung cấp mô tả cho mọi icon-button không có nhãn chữ.
+- **Keyboard Shortcuts**: Hướng tới tích hợp `Cmd+K` (hoặc `Ctrl+K`) để mở thanh lệnh nhanh.
+
+## 11. Responsive Design Strategy
+- **Adaptive Sidebar**: Sidebar tự động thu gọn thành Icon trên Tablet và ẩn hoàn toàn trên Mobile (sử dụng Hamburger menu).
+- **Mobile First Spacing**: Trên di động, giảm khoảng cách (padding/gap) từ hệ 8px xuống 4px để tối ưu không gian hiển thị.
+- **Touch Targets**: Các phần tử tương tác trên Mobile phải có kích thước tối thiểu 44x44px.
+
+---
+*Bản thiết kế này được nâng cấp bởi Antigravity dựa trên bộ quy chuẩn UI-UX Pro Max & Frontend Design.*

@@ -37,4 +37,23 @@ public class OrderController : ControllerBase
         await _orderService.ApproveOrderItemAsync(orderId, productId);
         return Ok();
     }
+
+    [HttpPut("{orderId}/items/{itemId}")]
+    public async Task<IActionResult> UpdateItem(Guid orderId, Guid itemId, [FromBody] UpdateOrderItemRequest request)
+    {
+        await _orderService.UpdateOrderItemQuantityAsync(orderId, itemId, request.Quantity);
+        return Ok();
+    }
+
+    [HttpDelete("{orderId}/items/{itemId}")]
+    public async Task<IActionResult> DeleteItem(Guid orderId, Guid itemId)
+    {
+        await _orderService.RemoveOrderItemAsync(orderId, itemId);
+        return Ok();
+    }
+}
+
+public class UpdateOrderItemRequest
+{
+    public int Quantity { get; set; }
 }

@@ -7,28 +7,15 @@ namespace ShopManagement.Application.DTOs.Tables;
 /// </summary>
 public class TableDto
 {
-    /// <summary>
-    /// Mã định danh duy nhất của bàn.
-    /// </summary>
     public Guid Id { get; set; }
-
-    /// <summary>
-    /// Tên bàn (Ví dụ: Bàn 01, VIP 1).
-    /// </summary>
+    public Guid? BranchId { get; set; }
+    public Guid? AreaId { get; set; }
+    public string? AreaName { get; set; }
     public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Sức chứa tối đa của bàn.
-    /// </summary>
     public int Capacity { get; set; }
-
-    /// <summary>
-    /// Trạng thái hiện tại của bàn.
-    /// </summary>
     public TableStatus Status { get; set; }
-
-    /// <summary>
-    /// Vị trí của bàn (Ví dụ: Tầng 1, Sân vườn).
-    /// </summary>
     public string Location { get; set; } = string.Empty;
+    public string TableNumber => Name;
+    public int Seats => Capacity;
+    public bool IsOccupied => Status == TableStatus.InUse;
 }

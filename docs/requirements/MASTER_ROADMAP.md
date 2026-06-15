@@ -42,10 +42,20 @@
 ## 🏗️ GIAI ĐOẠN 3: KẾ TOÁN & KIỂM KÊ (Backlog - Chưa Lên Kế Hoạch ⬛)
 *Chấm mốc chuẩn bị ý tưởng trong tương lai.*
 
+- [x] 💳 **Ghi nhận Thanh toán (Payments):** Mỗi lần checkout tạo bản ghi `Payment` (Tiền mặt / Chuyển khoản / Thẻ), đóng order & giải phóng bàn. Số tiền do server tự tính (authoritative). *(Nền tảng cho Z-Report)*
 - [ ] ⬛ **Z-Report (Chốt ca thu ngân - BẮT BUỘC):** Bản in tổng kết thu chi sau khi kết thúc ca (Tiền mặt vs Chuyển khoản).
 - [ ] ⬛ **Kitchen Display System (KDS):** Màn hình cho Bếp gạch bỏ món đã nấu (Không cần dùng giấy).
 - [ ] ⬛ **Kiểm Kho Nguyên Liệu (Inventory):** Nhập/Xuất kho hàng ngày. Tính định lượng tiêu hao.
-- [ ] ⬛ **Báo Báo Doanh Thu (Analytics):** Biểu đồ ChartJS doanh thu hằng tháng.
+- [ ] 🚧 **Báo Cáo Doanh Thu (Analytics):** *Đã có:* API `GET /api/reports/revenue` + thẻ thống kê & biểu đồ doanh thu 7 ngày trên Dashboard (dữ liệu thật, đa chi nhánh). *Còn lại:* báo cáo theo tháng, lọc khoảng ngày, export.
+
+---
+
+### 4. Hệ Thống Trải Nghiệm Người Dùng Toàn Diện (UI/UX Global Overhaul)
+*Lịch sử ra quyết định: [Nhật ký UI/UX Overhaul](../plans/ui_ux_overhaul_plan.md)*
+- [ ] ⏳ **Global Design System (GDS):** Áp dụng bộ Design Token mới (Plus Jakarta Sans, Vibrant Purple) đồng bộ cho toàn bộ dự án.
+- [ ] ⏳ **Responsive Layout Engine:** Xây dựng khung bọc Layout thông minh, tự động xử lý Navbar/Sidebar trên Mobile/Tablet.
+- [ ] ⏳ **Premium Empty States:** Thiết kế trạng thái trống (Blank pages) chuyên nghiệp với Illustration SVG và CTA rõ ràng.
+- [ ] ⏳ **Full Page Optimization:** Tái cấu trúc Landing Page, Login/Register và Dashboard đạt chuẩn UX Mobile-First.
 
 ---
 

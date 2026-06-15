@@ -1,39 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { tableApi } from "../api/tableApi";
 import type { TableDto } from "../models/table";
 import { TableStatus } from "../models/table";
 import { OrderPage } from "../components/OrderPage";
 import { orderApi } from "../api/orderApi";
+import { paymentApi } from "../api/paymentApi";
+import { reportApi, type RevenueSummary } from "../api/reportApi";
 import { useSignalR } from "../hooks/useSignalR";
 import { useAuth } from "../context/AuthContext";
 
-import { ProfileDropdown } from "../components/ProfileDropdown";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  LayoutDashboard, 
-  Map as MapIcon, 
-  Users, 
-  UtensilsCrossed,
-  RefreshCcw, 
-  Plus, 
-  ChevronRight,
+import {
+  LayoutDashboard,
+  Users,
+  Plus,
   CheckCircle2,
   Loader2,
-  ArrowLeft,
-  Trash2
+  Trash2,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { TableViewMap } from "../components/TableViewMap";
-import { Logo } from "../components/Logo";
 import { InviteStaffModal } from "../components/InviteStaffModal";
 import { CreateTableModal } from "../components/CreateTableModal";
-import { MenuManagement } from "../components/MenuManagement";
+import { ConfirmModal } from "../components/ConfirmModal";
 import { LinearSelect } from "../components/LinearSelect";
-import { useNavigate } from "react-router-dom";
+import { TableSkeleton } from "../components/Skeleton";
+import { useLocation } from "react-router-dom";
 import apiClient from "../api/apiClient";
+import { toast } from "sonner";
+import { TrendingUp, ShoppingBag, UserCheck, DollarSign } from "lucide-react";
+
+// Lazy load heavy components for code-splitting
+const TableViewMap = React.lazy(() =>
+  import("../components/TableViewMap").then((module) => ({
+    default: module.TableViewMap,
+  })),
+);
 
 export const Dashboard: React.FC = () => {
-  const { currentShop } = useAuth();
+  const { currentShop, currentBranch } = useAuth();
   const shopRole = currentShop?.role;
   const roleRank =
     typeof shopRole === "number"
@@ -48,47 +52,104 @@ export const Dashboard: React.FC = () => {
   const canManage = roleRank !== undefined && roleRank <= 1;
   const [tables, setTables] = useState<TableDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [confirmingCheckoutId, setConfirmingCheckoutId] = useState<string | null>(null);
-  const [notifications, setNotifications] = useState<{ id: number; message: string; type: "info" | "success" }[]>([]);
-  const [viewingOrder, setViewingOrder] = useState<{ tableId: string; tableName: string; orderId: string; } | null>(null);
+  const [confirmingCheckoutId, setConfirmingCheckoutId] = useState<
+    string | null
+  >(null);
+  const [viewingOrder, setViewingOrder] = useState<{
+    tableId: string;
+    tableName: string;
+    orderId: string;
+  } | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCreateTableModal, setShowCreateTableModal] = useState(false);
-  const [activeNav, setActiveNav] = useState("tables");
-  const [staffList, setStaffList] = useState<{ userId: string; username: string; role: number; joinedAt: string }[]>([]);
-  const [loadingStaff, setLoadingStaff] = useState(false);
-  const navigate = useNavigate();
+  const location = useLocation();
+  const pathParts = location.pathname.split("/");
+  const currentView = pathParts[pathParts.length - 1];
+  let activeNav = currentView === "dashboard" ? "overview" : currentView;
+  if (activeNav === "employees") activeNav = "staff"; // mapping
 
-  const addNotification = (message: string, type: "info" | "success" = "info") => {
-    const id = Date.now();
-    setNotifications((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => { setNotifications((prev) => prev.filter((n) => n.id !== id)); }, 4000);
+  const [staffList, setStaffList] = useState<
+    { userId: string; username: string; role: number; joinedAt: string }[]
+  >([]);
+  const [deleteTableId, setDeleteTableId] = useState<string | null>(null);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
+
+  const formatVnd = (value: number) =>
+    new Intl.NumberFormat("vi-VN").format(Math.round(value)) + "đ";
+
+  const loadRevenue = async () => {
+    if (!currentShop) return;
+    try {
+      const data = await reportApi.getRevenueSummary();
+      setRevenue(data);
+    } catch (err) {
+      console.error("Failed to load revenue summary", err);
+    }
   };
+
 
   useSignalR("http://localhost:5090/hubs/shop", (connection) => {
     if (currentShop) connection.invoke("JoinShopGroup", currentShop.id);
-    connection.on("TableStatusUpdated", () => { loadTables(); addNotification("Table status updated", "info"); });
-    connection.on("ReceiveAlert", (message: string) => addNotification(message, "info"));
+    connection.on("TableStatusUpdated", () => {
+      loadTables();
+      toast.info("Trạng thái bàn đã cập nhật");
+    });
+    connection.on("ReceiveAlert", (message: string) =>
+      toast.info(message),
+    );
   });
 
-  useEffect(() => { loadTables(); }, [currentShop]);
+  useEffect(() => {
+    loadTables();
+  }, [currentShop, currentBranch]);
+
+  const getApiError = (err: any) =>
+    err?.response?.data?.error ||
+    err?.response?.data?.message ||
+    "Có lỗi xảy ra";
+
+  const handleDeleteTable = async (id: string) => {
+    try {
+      await tableApi.deleteTable(id);
+      toast.success("Đã xóa bàn");
+      setDeleteTableId(null);
+      await loadTables();
+    } catch (err: any) {
+      toast.error(getApiError(err));
+      setDeleteTableId(null);
+    }
+  };
 
   const handleTableAction = async (table: TableDto) => {
     if (table.status === TableStatus.Available) {
-       handleOpenTable(table.id);
+      handleOpenTable(table.id);
     } else {
-       try {
-         const activeOrder = await orderApi.getActiveOrder(table.id);
-         setViewingOrder({ tableId: table.id, tableName: table.name, orderId: activeOrder.id });
-       } catch (err) { setError("Could not load order information"); }
+      try {
+        const activeOrder = await orderApi.getActiveOrder(table.id);
+        setViewingOrder({
+          tableId: table.id,
+          tableName: table.name,
+          orderId: activeOrder.id,
+        });
+      } catch (err) {
+        toast.error("Không thể tải thông tin đơn hàng");
+      }
     }
   };
 
   const loadTables = async () => {
     if (!currentShop) return;
-    try { setLoading(true); const data = await tableApi.getAll(); setTables(data); }
-    catch (err) { setError("Failed to connect to the backend"); }
-    finally { setLoading(false); }
+    try {
+      setLoading(true);
+      const data = await tableApi.getAll(currentBranch?.id);
+      setTables(data);
+    } catch (err) {
+      toast.error("Không thể kết nối đến máy chủ");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadStaff = async () => {
@@ -107,291 +168,517 @@ export const Dashboard: React.FC = () => {
   const handleUpdateMemberRole = async (userId: string, role: number) => {
     if (!currentShop) return;
     try {
-      await apiClient.put(`/shop/${currentShop.id}/members/${userId}/role`, { role });
+      await apiClient.put(`/shop/${currentShop.id}/members/${userId}/role`, {
+        role,
+      });
       await loadStaff();
-      addNotification("Role updated successfully", "success");
+      toast.success("Cập nhật quyền thành công");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Could not update role");
+      toast.error(err?.response?.data?.message || "Không thể cập nhật quyền");
     }
   };
 
   const handleRemoveMember = async (userId: string) => {
     if (!currentShop) return;
-    if (!window.confirm("Are you sure you want to remove this member?")) return;
     try {
       await apiClient.delete(`/shop/${currentShop.id}/members/${userId}`);
       await loadStaff();
-      addNotification("Member removed from shop", "success");
+      toast.success("Đã xóa nhân viên khỏi cửa hàng");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Could not remove member");
+      toast.error(err?.response?.data?.message || "Không thể xóa nhân viên");
+    } finally {
+      setRemovingMemberId(null);
     }
   };
 
   useEffect(() => {
-    if (activeNav === 'staff') {
+    if (activeNav === "staff") {
       loadStaff();
     }
   }, [activeNav, currentShop]);
 
+  useEffect(() => {
+    if (activeNav === "overview") {
+      loadRevenue();
+    }
+  }, [activeNav, currentShop, currentBranch]);
+
   const handleOpenTable = async (id: string) => {
     try {
       const response = await tableApi.open(id);
-      addNotification(`Table ${response.tableName} opened`, "success");
+      toast.success(`Bàn ${response.tableName} đã được mở`);
       loadTables();
-      setViewingOrder({ tableId: id, tableName: response.tableName, orderId: response.orderId });
-    } catch (err: any) { setError(err.response?.data?.message || "Lỗi mở bàn"); }
+      setViewingOrder({
+        tableId: id,
+        tableName: response.tableName,
+        orderId: response.orderId,
+      });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Lỗi mở bàn");
+    }
   };
 
   const handleCheckout = async (id: string) => {
-    try { 
-      await tableApi.checkout(id); 
-      addNotification("Thanh toán thành công", "success"); 
-      loadTables(); 
+    try {
+      // Ghi nhận thanh toán tiền mặt (server tự tính tổng tiền của order đang mở).
+      const activeOrder = await orderApi.getActiveOrder(id);
+      await paymentApi.createPayment({
+        orderId: activeOrder.id,
+        amount: activeOrder.totalAmount ?? 0,
+        method: "Cash",
+      });
+      toast.success("Thanh toán thành công", {
+        description: "Đã ghi nhận thanh toán. Bàn đã chuyển về trạng thái Trống."
+      });
+      loadTables();
+      loadRevenue();
       setConfirmingCheckoutId(null);
-    } catch (err: any) { 
-      setError("Lỗi thanh toán: " + (err.response?.data?.message || err.message)); 
+    } catch (err: any) {
+      toast.error("Lỗi thanh toán", {
+        description: err.response?.data?.message || err.message
+      });
       setConfirmingCheckoutId(null);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30">
-      <aside className="w-64 border-r border-white/[0.05] bg-slate-deep hidden md:flex flex-col sticky top-0 h-screen">
-        <div className="p-6 flex flex-col h-full">
-          <div className="mb-8 px-2">
-            <Logo iconSize={4} textSize="text-lg" />
-          </div>
+    <div className="space-y-8">
 
-          <nav className="space-y-1 flex-1">
-             {[
-               { id: 'tables', label: 'Tables', icon: LayoutDashboard },
-               { id: 'map', label: 'Floor Plan', icon: MapIcon },
-               { id: 'menu', label: 'Menu', icon: UtensilsCrossed },
-               { id: 'staff', label: 'Staff', icon: Users },
-             ].map((item) => (
-               <button
-                 key={item.id}
-                 onClick={() => setActiveNav(item.id)}
-                 className={cn(
-                   "w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg transition-all group",
-                   activeNav === item.id 
-                    ? "bg-white/[0.05] text-white" 
-                    : "text-brand-gray hover:text-white hover:bg-white/[0.02]"
-                 )}
-               >
-                 <item.icon className={cn("w-4 h-4 transition-colors", activeNav === item.id ? "text-brand-purple" : "text-[#4c4f5a] group-hover:text-brand-gray")} />
-                 {item.label}
-               </button>
-             ))}
-           </nav>
-
-          <div className="mt-auto pt-6 border-t border-white/[0.05]">
-            <button 
-              onClick={() => navigate('/shops')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all group font-semibold bg-white/[0.02] text-brand-gray border border-white/[0.05] hover:bg-white/[0.05] hover:text-white"
+      {activeNav === "overview" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Doanh thu hôm nay", value: revenue ? formatVnd(revenue.todayRevenue) : "—", trend: "Hôm nay", icon: DollarSign, color: "text-emerald-400" },
+            { label: "Đơn đã thanh toán", value: revenue ? String(revenue.todayOrderCount) : "—", trend: "Hôm nay", icon: ShoppingBag, color: "text-brand-purple" },
+            { label: "Bàn đang dùng", value: `${tables.filter(t => t.status !== 0).length}/${tables.length}`, trend: "Live", icon: UserCheck, color: "text-brand-orange" },
+            { label: "Doanh thu 7 ngày", value: revenue ? formatVnd(revenue.weekRevenue) : "—", trend: "7 ngày", icon: TrendingUp, color: "text-amber-400" },
+          ].map((stat, i) => (
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="linear-card p-5 group hover:border-brand-purple/30 transition-all cursor-default"
             >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              Back to Shops
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      <main className="flex-1 flex flex-col min-w-0 bg-void">
-        <header className="h-16 border-b border-white/[0.05] flex items-center justify-between px-8 bg-void/50 backdrop-blur-md sticky top-0 z-40">
-          <div className="flex items-center gap-4 text-sm font-medium text-brand-gray">
-            <span>{currentShop?.name}</span>
-            <ChevronRight className="w-3 h-3 text-[#31343e]" />
-            <span className={cn(activeNav === 'map' ? "text-white" : "")}>
-              {activeNav === 'map' ? 'Floor Plan' : activeNav === 'menu' ? 'Menu Management' : activeNav === 'staff' ? 'Staff Management' : 'Table List'}
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-             <button onClick={loadTables} className="p-2 text-brand-gray hover:text-white transition-colors">
-                <RefreshCcw className={cn("w-4.5 h-4.5", loading && "animate-spin")} />
-             </button>
-             <ProfileDropdown />
-          </div>
-        </header>
-
-        <div className="p-8 max-w-7xl mx-auto w-full">
-           <div className="flex justify-between items-end mb-8">
-              <div>
-                 <h2 className="text-2xl font-bold tracking-tight mb-1">
-                    {activeNav === 'map' ? 'Floor Plan' : activeNav === 'menu' ? 'Menu Management' : activeNav === 'staff' ? 'Staff Management' : 'Table List'}
-                 </h2>
-                 <p className="text-sm text-brand-gray uppercase tracking-widest font-bold text-[10px]">
-                    {activeNav === 'map' ? 'Visual layout' : activeNav === 'menu' ? 'Categories & products' : activeNav === 'staff' ? 'Staff list' : 'Table status management'}
-                 </p>
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 rounded-lg bg-white/[0.03] group-hover:bg-brand-purple/10 transition-colors">
+                  <stat.icon className={cn("w-5 h-5", stat.color)} />
+                </div>
+                <span className={cn("text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/[0.03]", stat.color)}>
+                  {stat.trend}
+                </span>
               </div>
+              <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest mb-1">{stat.label}</p>
+              <h4 className="text-2xl font-black text-white">{stat.value}</h4>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-              {activeNav === 'staff' && canManage && (
-                <button onClick={() => setShowInviteModal(true)} className="btn-primary flex items-center gap-2 text-xs">
-                  <Plus className="w-4 h-4" /> Invite Staff
-                </button>
-              )}
+      <div className="w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-1">
+                {activeNav === "overview"
+                  ? "Tổng quan"
+                  : activeNav === "tables"
+                    ? "Quản lý Bàn"
+                    : activeNav === "staff"
+                      ? "Nhân sự"
+                      : "Shop"}
+              </h2>
+              <p className="text-sm text-brand-gray uppercase tracking-widest font-bold text-[10px]">
+                {activeNav === "overview"
+                  ? "Thống kê hoạt động"
+                  : activeNav === "tables"
+                    ? "Sơ đồ và trạng thái bàn"
+                    : activeNav === "staff"
+                      ? "Quản lý nhân viên"
+                      : "Quản lý shop"}
+              </p>
+            </div>
 
-              {activeNav === 'map' && canManage && (
-                <button onClick={() => setShowCreateTableModal(true)} className="px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/40 border border-brand-purple/30 rounded-xl text-brand-purple hover:text-white transition-all flex items-center gap-2 text-xs font-bold">
-                  <Plus className="w-4 h-4" /> Arrange Tables
-                </button>
-              )}
-           </div>
+            {activeNav === "staff" && canManage && (
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="btn-primary flex items-center gap-2 text-xs"
+              >
+                <Plus className="w-4 h-4" /> Invite Staff
+              </button>
+            )}
 
-           {error && (
-             <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm font-semibold flex items-center justify-between">
-               <span>{error}</span>
-               <button onClick={() => setError(null)} className="text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100">Dismiss</button>
-             </div>
-           )}
+            {activeNav === "tables" && canManage && (
+              <button
+                onClick={() => setShowCreateTableModal(true)}
+                className="px-4 py-2 bg-brand-purple/20 hover:bg-brand-purple/40 border border-brand-purple/30 rounded-xl text-brand-purple hover:text-white transition-all flex items-center gap-2 text-xs font-bold"
+              >
+                <Plus className="w-4 h-4" /> Arrange Tables
+              </button>
+            )}
+          </div>
 
-           {loading && activeNav === 'tables' ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-               {[1,2,3,4].map(i => <div key={i} className="h-40 linear-surface animate-pulse" />)}
-             </div>
-           ) : (
-             <>
-               {activeNav === 'map' ? (
-                  <TableViewMap 
-                    tables={tables} 
-                    onTableClick={handleTableAction}
-                    onOpenTable={handleOpenTable}
-                  />
-               ) : activeNav === 'menu' ? (
-                  canManage ? (
-                    <MenuManagement />
-                  ) : (
-                    <div className="linear-surface rounded-2xl border border-white/[0.05] p-10 text-center">
-                      <p className="text-sm font-semibold text-brand-gray">You do not have permission to manage the menu.</p>
+
+          {loading && activeNav === "tables" ? (
+            <TableSkeleton />
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeNav}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              >
+                {activeNav === "overview" ? (
+                  <div className="linear-surface rounded-2xl border border-white/[0.05] p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-bold">Doanh thu 7 ngày qua</h3>
+                        <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest mt-1">
+                          Giá trị đơn trung bình:{" "}
+                          {revenue ? formatVnd(revenue.averageOrderValue) : "—"}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-brand-gray">
+                        {revenue ? `${revenue.weekOrderCount} đơn` : ""}
+                      </span>
                     </div>
-                  )
-               ) : activeNav === 'staff' ? (
-                  <div className="linear-surface rounded-2xl border border-white/[0.05]">
-                    {loadingStaff ? (
-                       <div className="p-12 text-center flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-brand-purple my-12" /></div>
-                    ) : staffList.length === 0 ? (
-                      <div className="p-12 text-center border-dashed border-white/[0.1]">
-                         <Users className="w-12 h-12 text-[#4c4f5a] mx-auto mb-4" />
-                         <p className="text-sm font-semibold text-brand-gray">No staff members found.</p>
+
+                    {!revenue ? (
+                      <div className="h-48 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-brand-purple" />
+                      </div>
+                    ) : revenue.weekRevenue === 0 ? (
+                      <div className="h-48 flex flex-col items-center justify-center text-center">
+                        <TrendingUp className="w-10 h-10 text-[#6b5d52] mb-3" />
+                        <p className="text-sm text-brand-gray">
+                          Chưa có doanh thu trong 7 ngày qua.
+                        </p>
                       </div>
                     ) : (
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-[#0b0c10] border-b border-white/[0.05]">
-                           <tr>
-                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">Username</th>
-                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">Role</th>
-                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">Joined At</th>
-                              {canManage && <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest text-right">Actions</th>}
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/[0.02]">
-                           {staffList.map((st, i) => (
-                             <tr key={st.userId} className="hover:bg-white/[0.02] transition-colors">
-                                <td className="px-6 py-4 font-bold">{st.username}</td>
+                      <div className="flex items-end justify-between gap-2 h-48">
+                        {(() => {
+                          const max = Math.max(
+                            ...revenue.dailySeries.map((d) => d.revenue),
+                            1,
+                          );
+                          return revenue.dailySeries.map((d) => {
+                            const heightPct = (d.revenue / max) * 100;
+                            const dayLabel = new Date(
+                              d.date + "T00:00:00",
+                            ).toLocaleDateString("vi-VN", {
+                              weekday: "short",
+                            });
+                            return (
+                              <div
+                                key={d.date}
+                                className="flex-1 flex flex-col items-center gap-2 group"
+                              >
+                                <div className="relative w-full flex-1 flex items-end">
+                                  <div
+                                    className="w-full rounded-t-md bg-gradient-to-t from-brand-purple/40 to-brand-purple group-hover:from-brand-purple/60 group-hover:to-brand-purple transition-all min-h-[4px]"
+                                    style={{ height: `${heightPct}%` }}
+                                    title={`${formatVnd(d.revenue)} • ${d.orderCount} đơn`}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold text-brand-gray capitalize">
+                                  {dayLabel}
+                                </span>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                ) : activeNav === "tables" ? (
+                  <Suspense
+                    fallback={
+                      <div className="p-12 text-center flex justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-brand-purple my-12" />
+                      </div>
+                    }
+                  >
+                    <TableViewMap
+                      tables={tables}
+                      onTableClick={handleTableAction}
+                      onOpenTable={handleOpenTable}
+                      onDeleteTable={canManage ? (id) => setDeleteTableId(id) : undefined}
+                    />
+                  </Suspense>
+                ) : activeNav === "staff" ? (
+                  <div className="linear-surface rounded-2xl border border-white/[0.05]">
+                    {loadingStaff ? (
+                      <div className="p-12 text-center flex justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-brand-purple my-12" />
+                      </div>
+                    ) : staffList.length === 0 ? (
+                      <div className="p-12 text-center border-dashed border-white/[0.1]">
+                        <Users className="w-12 h-12 text-[#6b5d52] mx-auto mb-4" />
+                        <p className="text-sm font-semibold text-brand-gray">
+                          No staff members found.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <table className="w-full text-left text-sm hidden md:table">
+                          <thead className="bg-void/60 border-b border-border-normal">
+                            <tr>
+                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">
+                                Username
+                              </th>
+                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">
+                                Role
+                              </th>
+                              <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest">
+                                Joined At
+                              </th>
+                              {canManage && (
+                                <th className="px-6 py-4 font-bold text-brand-gray text-[10px] uppercase tracking-widest text-right">
+                                  Actions
+                                </th>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/[0.02]">
+                            {staffList.map((st) => (
+                              <tr
+                                key={st.userId}
+                                className="hover:bg-white/[0.02] transition-colors"
+                              >
+                                <td className="px-6 py-4 font-bold">
+                                  {st.username}
+                                </td>
                                 <td className="px-6 py-4">
                                   {canManage ? (
-                                    <LinearSelect 
+                                    <LinearSelect
                                       options={[
                                         { value: 0, label: "Owner" },
                                         { value: 1, label: "Manager" },
-                                        { value: 2, label: "Staff" }
+                                        { value: 2, label: "Staff" },
                                       ]}
                                       value={st.role}
-                                      onChange={(val) => handleUpdateMemberRole(st.userId, val)}
+                                      onChange={(val) =>
+                                        handleUpdateMemberRole(st.userId, val)
+                                      }
                                       className="w-32"
                                     />
                                   ) : (
-                                    <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider", st.role === 0 ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : st.role === 1 ? "bg-brand-purple/10 text-brand-purple border border-brand-purple/20" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20")}>
-                                       {st.role === 0 ? "Owner" : st.role === 1 ? "Manager" : "Staff"}
+                                    <span
+                                      className={cn(
+                                        "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                        st.role === 0
+                                          ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                          : st.role === 1
+                                            ? "bg-brand-purple/10 text-brand-purple border border-brand-purple/20"
+                                            : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+                                      )}
+                                    >
+                                      {st.role === 0
+                                        ? "Owner"
+                                        : st.role === 1
+                                          ? "Manager"
+                                          : "Staff"}
                                     </span>
                                   )}
                                 </td>
                                 <td className="px-6 py-4 text-brand-gray font-medium">
-                                  {new Date(st.joinedAt).toLocaleDateString('vi-VN')}
+                                  {new Date(st.joinedAt).toLocaleDateString(
+                                    "vi-VN",
+                                  )}
                                 </td>
                                 {canManage && (
                                   <td className="px-6 py-4 text-right">
-                                    <button 
-                                      onClick={() => handleRemoveMember(st.userId)}
+                                    <button
+                                      onClick={() =>
+                                        setRemovingMemberId(st.userId)
+                                      }
+                                      aria-label={`Xóa nhân viên ${st.username}`}
                                       className="p-2 hover:bg-rose-500/10 rounded-lg text-brand-gray hover:text-rose-400 transition-all"
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </button>
                                   </td>
                                 )}
-                             </tr>
-                           ))}
-                        </tbody>
-                      </table>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="md:hidden space-y-4">
+                          {staffList.map((st) => (
+                            <div
+                              key={st.userId}
+                              className="linear-surface p-4 rounded-xl"
+                            >
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h4 className="font-bold text-white">
+                                    {st.username}
+                                  </h4>
+                                  <p className="text-sm text-brand-gray">
+                                    Joined:{" "}
+                                    {new Date(st.joinedAt).toLocaleDateString(
+                                      "vi-VN",
+                                    )}
+                                  </p>
+                                </div>
+                                {canManage ? (
+                                  <LinearSelect
+                                    options={[
+                                      { value: 0, label: "Owner" },
+                                      { value: 1, label: "Manager" },
+                                      { value: 2, label: "Staff" },
+                                    ]}
+                                    value={st.role}
+                                    onChange={(val) =>
+                                      handleUpdateMemberRole(st.userId, val)
+                                    }
+                                    className="w-24 text-xs"
+                                  />
+                                ) : (
+                                  <span
+                                    className={cn(
+                                      "px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                      st.role === 0
+                                        ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                        : st.role === 1
+                                          ? "bg-brand-purple/10 text-brand-purple border border-brand-purple/20"
+                                          : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+                                    )}
+                                  >
+                                    {st.role === 0
+                                      ? "Owner"
+                                      : st.role === 1
+                                        ? "Manager"
+                                        : "Staff"}
+                                  </span>
+                                )}
+                              </div>
+                              {canManage && (
+                                <button
+                                  onClick={() => setRemovingMemberId(st.userId)}
+                                  className="w-full mt-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-sm font-semibold transition-all"
+                                >
+                                  Remove Member
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
-               ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                ) : tables.length === 0 ? (
+                  <div className="linear-surface rounded-2xl border border-white/[0.05] p-12 text-center">
+                    <div className="w-16 h-16 rounded-full bg-brand-purple/10 flex items-center justify-center mb-6 mx-auto">
+                      <LayoutDashboard className="w-8 h-8 text-brand-purple" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">No Tables Yet</h3>
+                    <p className="text-sm text-brand-gray mb-6">
+                      Get started by creating your first table to manage orders
+                      and seating.
+                    </p>
+                    {canManage && (
+                      <button
+                        onClick={() => setShowCreateTableModal(true)}
+                        className="btn-primary"
+                      >
+                        Create First Table
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {tables.map((table) => (
-                      <motion.div layout key={table.id} className="p-5 linear-card group">
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                        key={table.id}
+                        className="p-5 linear-card group"
+                      >
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex flex-col">
-                             <span className="text-[10px] font-bold text-brand-gray uppercase tracking-widest mb-1">{table.location}</span>
-                             <h3 className="text-lg font-bold">{table.name}</h3>
+                            <span className="text-[10px] font-bold text-brand-gray uppercase tracking-widest mb-1">
+                              {table.location}
+                            </span>
+                            <h3 className="text-lg font-bold">{table.name}</h3>
                           </div>
-                          <div className={cn("w-2 h-2 rounded-full", table.status === TableStatus.Available ? "bg-brand-emerald shadow-[0_0_10px_rgba(16,185,129,0.4)]" : "bg-brand-purple")} />
+                          <div
+                            className={cn(
+                              "w-2 h-2 rounded-full",
+                              table.status === TableStatus.Available
+                                ? "bg-brand-emerald shadow-[0_0_10px_rgba(47,185,122,0.45)]"
+                                : "bg-brand-purple shadow-[0_0_10px_rgba(194,65,12,0.45)]",
+                            )}
+                          />
                         </div>
                         <div className="mt-auto">
                           {table.status === TableStatus.Available ? (
-                            <button onClick={() => handleOpenTable(table.id)} className="w-full py-2 bg-white/[0.03] hover:bg-brand-purple border border-white/[0.08] hover:border-brand-purple rounded-lg text-xs font-bold transition-all">
+                            <button
+                              onClick={() => handleOpenTable(table.id)}
+                              className="w-full py-2 bg-white/[0.03] hover:bg-brand-purple border border-white/[0.08] hover:border-brand-purple rounded-lg text-xs font-bold transition-all active:scale-95"
+                            >
                               Serve Table
                             </button>
                           ) : (
                             <div className="grid grid-cols-2 gap-2">
-                               <button onClick={() => handleTableAction(table)} className="py-2 bg-brand-purple text-white rounded-lg text-xs font-bold">Details</button>
-                               <button 
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   setConfirmingCheckoutId(table.id);
-                                 }} 
-                                 className="py-2 bg-white/[0.03] hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-xs font-bold transition-all"
-                               >
-                                 Checkout
-                               </button>
+                              <button
+                                onClick={() => handleTableAction(table)}
+                                className="py-2 bg-brand-purple text-white rounded-lg text-xs font-bold active:scale-95"
+                              >
+                                Details
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmingCheckoutId(table.id);
+                                }}
+                                className="py-2 bg-white/[0.03] hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-xs font-bold transition-all active:scale-95"
+                              >
+                                Checkout
+                              </button>
                             </div>
                           )}
                         </div>
                       </motion.div>
                     ))}
                   </div>
-               )}
-             </>
-           )}
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
-      </main>
 
-      <AnimatePresence>
-         {notifications.map((n) => (
-           <motion.div
-             key={n.id}
-             initial={{ opacity: 0, y: 20, scale: 0.9 }}
-             animate={{ opacity: 1, y: 0, scale: 1 }}
-             exit={{ opacity: 0, scale: 0.9 }}
-             className={cn(
-               "fixed bottom-8 right-8 z-[500] px-6 py-4 linear-surface shadow-2xl flex items-center gap-3 min-w-[300px]",
-               n.type === "success" ? "border-brand-emerald/30" : "border-brand-purple/30"
-             )}
-           >
-             {n.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-brand-emerald" /> : <Loader2 className="w-5 h-5 text-brand-purple animate-spin" />}
-             <span className="text-sm font-semibold">{n.message}</span>
-           </motion.div>
-         ))}
-      </AnimatePresence>
+
+      <ConfirmModal
+        open={removingMemberId !== null}
+        tone="danger"
+        title="Xóa nhân viên?"
+        description={`Xác nhận xóa ${
+          staffList.find((s) => s.userId === removingMemberId)?.username ?? "nhân viên này"
+        } khỏi cửa hàng. Họ sẽ mất quyền truy cập.`}
+        confirmLabel="Xóa"
+        onCancel={() => setRemovingMemberId(null)}
+        onConfirm={() => removingMemberId && handleRemoveMember(removingMemberId)}
+      />
 
       {showInviteModal && (
-        <InviteStaffModal onClose={() => { setShowInviteModal(false); loadStaff(); }} />
+        <InviteStaffModal
+          onClose={() => {
+            setShowInviteModal(false);
+            loadStaff();
+          }}
+        />
       )}
 
       {showCreateTableModal && (
         <CreateTableModal
           onClose={() => setShowCreateTableModal(false)}
           onSuccess={() => loadTables()}
-          existingLocations={Array.from(new Set((tables || []).map((t) => t.location).filter(Boolean)))}
+          existingLocations={Array.from(
+            new Set((tables || []).map((t) => t.location).filter(Boolean)),
+          )}
         />
       )}
 
@@ -400,24 +687,75 @@ export const Dashboard: React.FC = () => {
           tableId={viewingOrder.tableId}
           orderId={viewingOrder.orderId}
           tableName={viewingOrder.tableName}
-          onClose={() => { setViewingOrder(null); loadTables(); }}
+          onClose={() => {
+            setViewingOrder(null);
+            loadTables();
+          }}
           onTransferred={(newTableId, newTableName) => {
-            setViewingOrder((prev) => (prev ? { ...prev, tableId: newTableId, tableName: newTableName } : prev));
+            setViewingOrder((prev) =>
+              prev
+                ? { ...prev, tableId: newTableId, tableName: newTableName }
+                : prev,
+            );
             loadTables();
           }}
         />
       )}
 
+      {/* Delete Table Confirmation Modal */}
+      <AnimatePresence>
+        {deleteTableId && (
+          <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteTableId(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm linear-surface p-8 shadow-2xl border border-white/[0.1]"
+            >
+              <div className="flex flex-col items-center text-center">
+                <h3 className="text-xl font-bold mb-2">Xóa bàn?</h3>
+                <p className="text-sm text-brand-gray mb-8">
+                  Xác nhận xóa{" "}
+                  {tables.find((t) => t.id === deleteTableId)?.name}. Hành động này
+                  không thể hoàn tác.
+                </p>
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  <button
+                    onClick={() => setDeleteTableId(null)}
+                    className="py-3 px-4 bg-white/[0.05] hover:bg-white/[0.1] rounded-xl text-xs font-bold transition-all"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTable(deleteTableId)}
+                    className="py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Checkout Confirmation Modal */}
       <AnimatePresence>
         {confirmingCheckoutId && (
           <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setConfirmingCheckoutId(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -431,16 +769,18 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <h3 className="text-xl font-bold mb-2">Thanh toán bàn?</h3>
                 <p className="text-sm text-brand-gray mb-8">
-                  Xác nhận thanh toán cho {tables.find(t => t.id === confirmingCheckoutId)?.name}. Hành động này sẽ đóng đơn hàng hiện tại.
+                  Xác nhận thanh toán cho{" "}
+                  {tables.find((t) => t.id === confirmingCheckoutId)?.name}.
+                  Hành động này sẽ đóng đơn hàng hiện tại.
                 </p>
                 <div className="grid grid-cols-2 gap-3 w-full">
-                  <button 
+                  <button
                     onClick={() => setConfirmingCheckoutId(null)}
                     className="py-3 px-4 bg-white/[0.05] hover:bg-white/[0.1] rounded-xl text-xs font-bold transition-all"
                   >
                     Hủy
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleCheckout(confirmingCheckoutId)}
                     className="py-3 px-4 bg-brand-purple hover:bg-brand-purple/80 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-brand-purple/20"
                   >

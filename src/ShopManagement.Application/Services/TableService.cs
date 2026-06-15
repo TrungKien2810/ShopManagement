@@ -21,12 +21,15 @@ public class TableService : ITableService
         _tenantService = tenantService;
     }
 
-    public async Task<IEnumerable<TableDto>> GetAllTablesAsync()
+    public async Task<IEnumerable<TableDto>> GetAllTablesAsync(Guid? branchId = null)
     {
-        var tables = await _unitOfWork.Tables.GetAllAsync();
+        var tables = await _unitOfWork.Tables.GetAllAsync(branchId);
         return tables.Select(t => new TableDto
         {
             Id = t.Id,
+            BranchId = t.BranchId,
+            AreaId = t.AreaId,
+            AreaName = t.Area?.Name,
             Name = t.Name,
             Capacity = t.Capacity,
             Status = t.Status,
@@ -54,6 +57,7 @@ public class TableService : ITableService
         {
             Id = Guid.NewGuid(),
             ShopId = shopId,
+            BranchId = dto.BranchId ?? _tenantService.GetBranchId(),
             Name = dto.Name,
             Capacity = dto.Capacity,
             Location = location,
@@ -67,6 +71,9 @@ public class TableService : ITableService
         return new TableDto
         {
             Id = table.Id,
+            BranchId = table.BranchId,
+            AreaId = table.AreaId,
+            AreaName = location,
             Name = table.Name,
             Capacity = table.Capacity,
             Status = table.Status,
@@ -136,37 +143,6 @@ public class TableService : ITableService
         }
     }
 
-    public async Task CheckoutAsync(Guid tableId)
-    {
-        var table = await _unitOfWork.Tables.GetByIdAsync(tableId);
-        if (table == null) throw new EntityNotFoundException("Bàn", tableId);
-
-        var order = await _unitOfWork.Orders.GetActiveOrderByTableIdAsync(tableId);
-        if (order == null) throw new DomainException("Bàn này không có đơn hàng đang hoạt động.");
-
-        await _unitOfWork.BeginTransactionAsync();
-        try
-        {
-            order.CalculateTotal();
-            order.Status = OrderStatus.Paid;
-            order.CheckOutTime = DateTime.UtcNow;
-            await _unitOfWork.Orders.UpdateAsync(order);
-
-            table.Status = TableStatus.Available;
-            await _unitOfWork.Tables.UpdateAsync(table);
-
-            await _unitOfWork.SaveChangesAsync();
-            await _unitOfWork.CommitTransactionAsync();
-
-            await _notificationService.NotifyTableStatusUpdatedAsync(table.ShopId, tableId, TableStatus.Available);
-        }
-        catch (Exception)
-        {
-            await _unitOfWork.RollbackTransactionAsync();
-            throw;
-        }
-    }
-
     public async Task<TransferTableResponse> TransferTableAsync(Guid fromTableId, Guid toTableId)
     {
         if (fromTableId == toTableId) throw new DomainException("Bàn đích phải khác bàn nguồn.");
@@ -223,5 +199,64 @@ public class TableService : ITableService
             await _unitOfWork.RollbackTransactionAsync();
             throw;
         }
+    }
+
+    public async Task<TableDto> UpdateTableAsync(Guid id, ShopManagement.Application.DTOs.Table.CreateTableDto request)
+    {
+        var shopId = _tenantService.GetTenantId() ?? throw new UnauthorizedAccessException("ShopId not found");
+        var table = await _unitOfWork.Tables.GetByIdAsync(id);
+        if (table == null) throw new EntityNotFoundException("Bàn", id);
+        if (table.ShopId != shopId) throw new DomainException("Bàn không thuộc quán hiện tại.");
+
+        Guid? areaId = null;
+        var location = request.Location;
+
+        if (request.AreaId.HasValue)
+        {
+            var area = await _unitOfWork.TableAreas.GetByIdAsync(request.AreaId.Value);
+            if (area == null) throw new EntityNotFoundException("Khu vực", request.AreaId.Value);
+            if (area.ShopId != shopId) throw new DomainException("Khu vực không thuộc quán hiện tại.");
+
+            areaId = area.Id;
+            location = area.Name;
+        }
+
+        table.Name = request.Name;
+        table.Capacity = request.Capacity;
+        table.Location = location;
+        table.AreaId = areaId;
+        table.BranchId = request.BranchId ?? table.BranchId;
+
+        await _unitOfWork.Tables.UpdateAsync(table);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new TableDto
+        {
+            Id = table.Id,
+            BranchId = table.BranchId,
+            AreaId = table.AreaId,
+            AreaName = location,
+            Name = table.Name,
+            Capacity = table.Capacity,
+            Status = table.Status,
+            Location = table.Location
+        };
+    }
+
+    public async Task DeleteTableAsync(Guid id)
+    {
+        var shopId = _tenantService.GetTenantId() ?? throw new UnauthorizedAccessException("ShopId not found");
+        var table = await _unitOfWork.Tables.GetByIdAsync(id);
+        if (table == null) throw new EntityNotFoundException("Bàn", id);
+        if (table.ShopId != shopId) throw new DomainException("Bàn không thuộc quán hiện tại.");
+
+        var activeOrder = await _unitOfWork.Orders.GetActiveOrderByTableIdAsync(id);
+        if (activeOrder != null)
+        {
+            throw new DomainException("Bàn đang có đơn hàng chưa thanh toán");
+        }
+
+        await _unitOfWork.Tables.HardDeleteAsync(table);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

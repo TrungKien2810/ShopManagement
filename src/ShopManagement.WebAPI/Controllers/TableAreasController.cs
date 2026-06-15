@@ -74,7 +74,7 @@ public class TableAreasController : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Policy = "RequireManager")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, [FromQuery] string deleteMode = "deactivate")
     {
         var shopId = _tenantService.GetTenantId() ?? throw new UnauthorizedAccessException("ShopId not found");
 
@@ -82,7 +82,44 @@ public class TableAreasController : ControllerBase
         if (area == null) return NotFound(new { Message = "Không tìm thấy khu vực." });
         if (area.ShopId != shopId) return Forbid();
 
-        // Soft delete: deactivate area. Keep tables; they can still show legacy Location.
+        var tablesInArea = (await _unitOfWork.Tables.GetByAreaIdAsync(id)).ToList();
+
+        if (deleteMode == "deleteTables")
+        {
+            foreach (var table in tablesInArea)
+            {
+                var activeOrder = await _unitOfWork.Orders.GetActiveOrderByTableIdAsync(table.Id);
+                if (activeOrder != null)
+                {
+                    return BadRequest(new { message = "Bàn đang có đơn hàng chưa thanh toán" });
+                }
+            }
+
+            foreach (var table in tablesInArea)
+            {
+                await _unitOfWork.Tables.HardDeleteAsync(table);
+            }
+
+            await _unitOfWork.TableAreas.HardDeleteAsync(area);
+            await _unitOfWork.SaveChangesAsync();
+            return NoContent();
+        }
+
+        if (deleteMode == "keepTables")
+        {
+            foreach (var table in tablesInArea)
+            {
+                table.AreaId = null;
+                table.Location = "Chưa có khu vực";
+                await _unitOfWork.Tables.UpdateAsync(table);
+            }
+
+            await _unitOfWork.TableAreas.HardDeleteAsync(area);
+            await _unitOfWork.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // Default: soft deactivate area, keep tables linked
         area.IsActive = false;
         area.UpdatedAt = DateTime.UtcNow;
         await _unitOfWork.TableAreas.UpdateAsync(area);

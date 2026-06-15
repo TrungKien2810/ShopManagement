@@ -36,15 +36,8 @@ public class ShopController : ControllerBase
                 return Unauthorized();
             }
 
-            // DIAGNOSTIC: Check if user exists in DB
             var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
             var totalUsers = await _context.Users.CountAsync();
-            var diagnosticLog = $"[DIAGNOSTIC {DateTime.Now}]\n" +
-                                $"UserId from Token: {userId}\n" +
-                                $"User exists in DB: {userExists}\n" +
-                                $"Total users in DB: {totalUsers}\n" +
-                                "========================================\n";
-            await System.IO.File.AppendAllTextAsync("diagnostic_log.txt", diagnosticLog);
 
             if (!userExists)
             {

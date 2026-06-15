@@ -6,6 +6,7 @@ namespace ShopManagement.Domain.Entities;
 public class Order : BaseEntity
 {
     public Guid ShopId { get; set; }
+    public Guid? BranchId { get; set; }
     public Guid TableId { get; set; }
     public DateTime CheckInTime { get; set; } = DateTime.UtcNow;
     public DateTime? CheckOutTime { get; set; }
@@ -16,6 +17,7 @@ public class Order : BaseEntity
 
     // Navigation properties
     public virtual Shop Shop { get; set; } = null!;
+    public virtual Branch? Branch { get; set; }
     public virtual Table Table { get; set; } = null!;
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

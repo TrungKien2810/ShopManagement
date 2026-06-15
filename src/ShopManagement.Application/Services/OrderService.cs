@@ -11,13 +11,11 @@ public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IShopNotificationService _notificationService;
-    private readonly ITenantService _tenantService;
 
-    public OrderService(IUnitOfWork unitOfWork, IShopNotificationService notificationService, ITenantService tenantService)
+    public OrderService(IUnitOfWork unitOfWork, IShopNotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
-        _tenantService = tenantService;
     }
 
     public async Task AddItemToOrderAsync(Guid orderId, AddOrderItemRequest request)
@@ -101,12 +99,14 @@ public class OrderService : IOrderService
         {
             Id = order.Id,
             TableId = order.TableId,
+            BranchId = order.BranchId,
             TotalAmount = order.TotalAmount,
             AcceptedAmount = acceptedAmount,
             NeedsApprovalCount = needsApprovalCount,
             Status = order.Status,
             Items = order.OrderItems.Select(oi => new OrderItemDto
             {
+                Id = oi.Id,
                 ProductId = oi.ProductId,
                 ProductName = oi.Product?.Name ?? "Sản phẩm",
                 Quantity = oi.Quantity,
@@ -132,4 +132,44 @@ public class OrderService : IOrderService
         // Thông báo cho Bàn rằng món đã được duyệt
         await _notificationService.NotifyOrderUpdatedAsync(order.TableId, orderId);
     }
+
+    public async Task UpdateOrderItemQuantityAsync(Guid orderId, Guid itemId, int quantity)
+    {
+        if (quantity <= 0) throw new DomainException("Số lượng phải lớn hơn 0.");
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+        if (order == null) throw new EntityNotFoundException("Đơn hàng", orderId);
+
+        var item = order.OrderItems.FirstOrDefault(oi => oi.Id == itemId);
+        if (item == null) throw new EntityNotFoundException("Món trong đơn", itemId);
+
+        if (order.Status != OrderStatus.Open) throw new DomainException("Đơn hàng đã đóng, không thể sửa.");
+
+        item.Quantity = quantity;
+        order.CalculateTotal();
+        
+        await _unitOfWork.Orders.UpdateAsync(order);
+        await _unitOfWork.SaveChangesAsync();
+        
+        await _notificationService.NotifyOrderUpdatedAsync(order.TableId, orderId);
+    }
+
+    public async Task RemoveOrderItemAsync(Guid orderId, Guid itemId)
+    {
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+        if (order == null) throw new EntityNotFoundException("Đơn hàng", orderId);
+
+        var item = order.OrderItems.FirstOrDefault(oi => oi.Id == itemId);
+        if (item == null) throw new EntityNotFoundException("Món trong đơn", itemId);
+
+        if (order.Status != OrderStatus.Open) throw new DomainException("Đơn hàng đã đóng, không thể xóa.");
+
+        await _unitOfWork.Orders.RemoveOrderItemAsync(item);
+        order.CalculateTotal();
+
+        await _unitOfWork.Orders.UpdateAsync(order);
+        await _unitOfWork.SaveChangesAsync();
+        
+        await _notificationService.NotifyOrderUpdatedAsync(order.TableId, orderId);
+    }
+
 }

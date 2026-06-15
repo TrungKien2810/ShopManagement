@@ -173,7 +173,7 @@ export const EmergencySettingsModal: React.FC<{ onClose: () => void }> = ({ onCl
         </div>
 
         <div className="px-8 py-4 bg-black/40 text-center border-t border-white/[0.05]">
-           <p className="text-[9px] font-bold text-[#31343e] uppercase tracking-widest italic">Protected by ZôOS Security Infrastructure</p>
+           <p className="text-[9px] font-bold text-[#3d342c] uppercase tracking-widest italic">Protected by ZôOS Security Infrastructure</p>
         </div>
       </motion.div>
     </div>,

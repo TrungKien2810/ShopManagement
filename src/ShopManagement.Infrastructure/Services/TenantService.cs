@@ -34,4 +34,20 @@ public class TenantService : ITenantService
 
         return null;
     }
+
+    public Guid? GetBranchId()
+    {
+        var context = _httpContextAccessor.HttpContext;
+        
+        // Try getting from headers
+        if (context != null && context.Request.Headers.TryGetValue("BranchId", out var headerBranchId))
+        {
+            if (Guid.TryParse(headerBranchId.ToString(), out var parsedBranchId))
+            {
+                return parsedBranchId;
+            }
+        }
+
+        return null;
+    }
 }

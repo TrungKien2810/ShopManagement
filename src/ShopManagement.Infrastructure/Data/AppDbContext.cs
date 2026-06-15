@@ -27,6 +27,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<Shop> Shops { get; set; } = null!;
+    public DbSet<Branch> Branches { get; set; } = null!;
     public DbSet<ShopMember> ShopMembers { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Product> Products { get; set; } = null!;
@@ -34,6 +35,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<TableArea> TableAreas { get; set; } = null!;
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<OrderItem> OrderItems { get; set; } = null!;
+    public DbSet<Payment> Payments { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -113,7 +115,18 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                   .IsUnique();
         });
 
-        // 6. Cấu hình Shop
+        // 6. Cấu hình Payment
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
+            entity.HasOne(p => p.Order)
+                  .WithMany()
+                  .HasForeignKey(p => p.OrderId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // 7. Cấu hình Shop
         modelBuilder.Entity<Shop>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -138,24 +151,46 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // 8. Liên kết các thực thể với Shop (Multi-tenancy)
-        modelBuilder.Entity<Category>().HasOne(x => x.Shop).WithMany(x => x.Categories).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<Product>().HasOne(x => x.Shop).WithMany(x => x.Products).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<Table>().HasOne(x => x.Shop).WithMany(x => x.Tables).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<TableArea>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<Order>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<OrderItem>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        // 8. Cấu hình Branch
+        modelBuilder.Entity<Branch>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.HasOne(b => b.Shop)
+                  .WithMany(s => s.Branches)
+                  .HasForeignKey(b => b.ShopId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
 
-        // 9. Global Query Filters for Multi-tenancy
+        // 9. Liên kết các thực thể với Shop (Multi-tenancy) và Branch
+        modelBuilder.Entity<Category>().HasOne(x => x.Shop).WithMany(x => x.Categories).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Category>().HasOne(x => x.Branch).WithMany(x => x.Categories).HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<Product>().HasOne(x => x.Shop).WithMany(x => x.Products).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Product>().HasOne(x => x.Branch).WithMany(x => x.SpecificProducts).HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<Table>().HasOne(x => x.Shop).WithMany(x => x.Tables).HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Table>().HasOne(x => x.Branch).WithMany(x => x.Tables).HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<TableArea>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<Order>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Order>().HasOne(x => x.Branch).WithMany(x => x.Orders).HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<OrderItem>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Payment>().HasOne(x => x.Shop).WithMany().HasForeignKey(x => x.ShopId).OnDelete(DeleteBehavior.Restrict);
+
+        // 10. Global Query Filters for Multi-tenancy
         // NOTE: Using the DbContext instance property ensures the filter uses the
         // current request's ShopId instead of being "frozen" at startup.
         // When CurrentShopId is Guid.Empty (missing tenant), the filter returns no rows.
-        modelBuilder.Entity<Category>().HasQueryFilter(x => x.ShopId == CurrentShopId);
-        modelBuilder.Entity<Product>().HasQueryFilter(x => x.ShopId == CurrentShopId);
-        modelBuilder.Entity<Table>().HasQueryFilter(x => x.ShopId == CurrentShopId);
-        modelBuilder.Entity<TableArea>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Category>().HasQueryFilter(x => !EF.Property<bool>(x, "IsDeleted") && x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Product>().HasQueryFilter(x => !EF.Property<bool>(x, "IsDeleted") && x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Table>().HasQueryFilter(x => !EF.Property<bool>(x, "IsDeleted") && x.ShopId == CurrentShopId);
+        modelBuilder.Entity<TableArea>().HasQueryFilter(x => !EF.Property<bool>(x, "IsDeleted") && x.ShopId == CurrentShopId);
         modelBuilder.Entity<Order>().HasQueryFilter(x => x.ShopId == CurrentShopId);
         modelBuilder.Entity<OrderItem>().HasQueryFilter(x => x.ShopId == CurrentShopId);
+        modelBuilder.Entity<Payment>().HasQueryFilter(x => x.ShopId == CurrentShopId);
 
         // 10. Audit Log config
         modelBuilder.Entity<AuditLog>(entity =>

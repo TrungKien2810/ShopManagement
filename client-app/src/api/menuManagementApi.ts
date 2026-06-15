@@ -2,15 +2,16 @@ import apiClient from "./apiClient";
 
 export const menuManagementApi = {
   createCategory: async (request: { name: string; description?: string; isActive?: boolean }) => {
-    const response = await apiClient.post("/menu/categories", request);
+    const response = await apiClient.post("/categories", request);
     return response.data;
   },
   updateCategory: async (id: string, request: { name?: string; description?: string; isActive?: boolean }) => {
-    const response = await apiClient.put(`/menu/categories/${id}`, request);
+    const response = await apiClient.put(`/categories/${id}`, request);
     return response.data;
   },
-  deleteCategory: async (id: string) => {
-    await apiClient.delete(`/menu/categories/${id}`);
+  deleteCategory: async (id: string, force = false) => {
+    const url = `/categories/${id}` + (force ? "?force=true" : "");
+    await apiClient.delete(url);
   },
   createProduct: async (request: {
     name: string;
@@ -20,7 +21,7 @@ export const menuManagementApi = {
     imageUrl?: string;
     isAvailable?: boolean;
   }) => {
-    const response = await apiClient.post("/menu/products", request);
+    const response = await apiClient.post("/menuitems", request);
     return response.data;
   },
   updateProduct: async (
@@ -34,11 +35,12 @@ export const menuManagementApi = {
       isAvailable?: boolean;
     },
   ) => {
-    const response = await apiClient.put(`/menu/products/${id}`, request);
+    const response = await apiClient.put(`/menuitems/${id}`, request);
     return response.data;
   },
-  deleteProduct: async (id: string) => {
-    await apiClient.delete(`/menu/products/${id}`);
+  deleteProduct: async (id: string, force = false) => {
+    const url = `/menuitems/${id}` + (force ? "?force=true" : "");
+    await apiClient.delete(url);
   },
   uploadPhoto: async (file: File) => {
     const formData = new FormData();

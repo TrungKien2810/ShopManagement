@@ -12,12 +12,19 @@ interface Shop {
   role: string;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+}
+
 interface AuthContextType {
   user: User | null;
   currentShop: Shop | null;
+  currentBranch: Branch | null;
   login: (token: string, username: string, avatarUrl?: string) => void;
   logout: () => void;
   selectShop: (shop: Shop) => void;
+  selectBranch: (branch: Branch) => void;
   updateUserAvatar: (avatarUrl: string) => void;
 }
 
@@ -32,6 +39,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedShop = localStorage.getItem('zoos_shop');
     return savedShop ? JSON.parse(savedShop) : null;
   });
+  const [currentBranch, setCurrentBranch] = useState<Branch | null>(() => {
+    const savedBranch = localStorage.getItem('zoos_branch');
+    return savedBranch ? JSON.parse(savedBranch) : null;
+  });
 
   const login = (token: string, username: string, avatarUrl?: string) => {
     const newUser = { token, username, avatarUrl };
@@ -42,13 +53,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setCurrentShop(null);
+    setCurrentBranch(null);
     localStorage.removeItem('zoos_user');
     localStorage.removeItem('zoos_shop');
+    localStorage.removeItem('zoos_branch');
   };
 
   const selectShop = (shop: Shop) => {
     setCurrentShop(shop);
     localStorage.setItem('zoos_shop', JSON.stringify(shop));
+    // Clear branch when selecting a new shop
+    setCurrentBranch(null);
+    localStorage.removeItem('zoos_branch');
+  };
+
+  const selectBranch = (branch: Branch) => {
+    setCurrentBranch(branch);
+    localStorage.setItem('zoos_branch', JSON.stringify(branch));
   };
 
   const updateUserAvatar = (avatarUrl: string) => {
@@ -60,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, currentShop, login, logout, selectShop, updateUserAvatar }}>
+    <AuthContext.Provider value={{ user, currentShop, currentBranch, login, logout, selectShop, selectBranch, updateUserAvatar }}>
       {children}
     </AuthContext.Provider>
   );

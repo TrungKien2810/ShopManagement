@@ -9,4 +9,7 @@ public interface IOrderRepository
     Task AddAsync(Order order);
     Task UpdateAsync(Order order);
     Task AddOrderItemAsync(OrderItem item);
+    Task RemoveOrderItemAsync(OrderItem item);
+    Task<bool> ExistsOrderItemForProductAsync(Guid productId);
+    Task<List<Order>> GetPaidOrdersAsync(Guid shopId, Guid? branchId, DateTime fromUtc, DateTime toUtc);
 }

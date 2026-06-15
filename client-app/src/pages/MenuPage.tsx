@@ -1,38 +1,90 @@
-import React from "react";
-import { MenuGrid } from "../components/MenuGrid";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { cn } from "../lib/utils";
+import { MenuManagement } from "../components/MenuManagement";
+import { useAuth } from "../context/AuthContext";
+import { Loader2 } from "lucide-react";
+import apiClient from "../api/apiClient";
+
+export type MenuFilterType = "shared" | "branch";
 
 export const MenuPage: React.FC = () => {
-  const navigate = useNavigate();
+  const { branchId } = useParams<{ branchId: string }>();
+  const { currentShop, currentBranch, selectBranch } = useAuth();
+  const [filterType, setFilterType] = useState<MenuFilterType>("shared");
+  const [syncingBranch, setSyncingBranch] = useState(false);
+
+  useEffect(() => {
+    if (!branchId || !currentShop) return;
+    if (currentBranch?.id === branchId) return;
+
+    const syncBranch = async () => {
+      setSyncingBranch(true);
+      try {
+        const resp = await apiClient.get(`/shop/${currentShop.id}/branches`);
+        const found = resp.data.find((b: { id: string; name: string }) => b.id === branchId);
+        selectBranch(
+          found ? { id: found.id, name: found.name } : { id: branchId, name: "Cơ sở" },
+        );
+      } catch {
+        selectBranch({ id: branchId, name: "Cơ sở" });
+      } finally {
+        setSyncingBranch(false);
+      }
+    };
+
+    syncBranch();
+  }, [branchId, currentShop, currentBranch, selectBranch]);
+
+  const effectiveBranchId = branchId ?? currentBranch?.id;
+
+  if (syncingBranch && !currentBranch) {
+    return (
+      <div className="flex justify-center items-center min-h-[40vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-purple" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-void text-white font-sans selection:bg-brand-purple/30">
-      <header className="h-16 border-b border-white/[0.05] bg-void/50 backdrop-blur-md sticky top-0 z-40 px-6 flex items-center justify-between">
-        <button 
-          onClick={() => navigate("/")}
-          className="text-brand-gray hover:text-white font-bold uppercase tracking-widest text-[10px] flex items-center gap-2 transition-all group"
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight mb-1">Thực đơn</h2>
+        <p className="text-sm text-brand-gray uppercase tracking-widest font-bold text-[10px]">
+          Quản lý món ăn {currentBranch ? `— ${currentBranch.name}` : ""}
+        </p>
+      </div>
+
+      <div className="flex bg-white/[0.03] p-1 rounded-2xl border border-white/[0.08] w-full sm:w-fit">
+        <button
+          type="button"
+          onClick={() => setFilterType("shared")}
+          className={cn(
+            "flex-1 sm:flex-none px-6 py-2 rounded-xl text-xs font-black transition-all uppercase tracking-widest",
+            filterType === "shared"
+              ? "bg-brand-purple text-white shadow-lg"
+              : "text-brand-gray hover:text-white",
+          )}
         >
-          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
-          Trang chủ
+          Menu chung
         </button>
-        <h1 className="text-sm font-black text-white uppercase tracking-widest">
-          Thực Đơn (Menu)
-        </h1>
-        <div className="w-20" /> {/* Spacer to balance header */}
-      </header>
+        <button
+          type="button"
+          onClick={() => setFilterType("branch")}
+          disabled={!effectiveBranchId}
+          className={cn(
+            "flex-1 sm:flex-none px-6 py-2 rounded-xl text-xs font-black transition-all uppercase tracking-widest",
+            filterType === "branch"
+              ? "bg-brand-purple text-white shadow-lg"
+              : "text-brand-gray hover:text-white",
+            !effectiveBranchId && "opacity-40 cursor-not-allowed",
+          )}
+        >
+          Menu riêng
+        </button>
+      </div>
 
-      <main className="p-6 max-w-5xl mx-auto mt-6">
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-white">Khám phá Thực Đơn</h2>
-          <p className="text-brand-gray font-medium max-w-xl mx-auto">
-            Chọn danh mục bên dưới để xem các món ăn nổi bật của chúng tôi.
-          </p>
-        </div>
-
-        {/* We pass an empty function because this is view-only, or we can optionally handle clicks */}
-        <MenuGrid onSelectItem={(product) => console.log("Selected:", product)} />
-      </main>
+      <MenuManagement filterType={filterType} branchId={effectiveBranchId} />
     </div>
   );
 };

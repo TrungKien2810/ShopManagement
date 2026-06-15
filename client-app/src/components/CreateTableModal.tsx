@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import apiClient from "../api/apiClient";
+import { tableApi } from "../api/tableApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LayoutDashboard, Users, MapPin, AlertCircle, Loader2 } from "lucide-react";
+import {
+  X,
+  LayoutDashboard,
+  Users,
+  MapPin,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 
 interface CreateTableModalProps {
   onClose: () => void;
@@ -10,7 +17,11 @@ interface CreateTableModalProps {
   existingLocations?: string[];
 }
 
-export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onSuccess, existingLocations }) => {
+export const CreateTableModal: React.FC<CreateTableModalProps> = ({
+  onClose,
+  onSuccess,
+  existingLocations,
+}) => {
   const [name, setName] = useState("");
   const [capacity, setCapacity] = useState<number>(4);
   const [locationPreset, setLocationPreset] = useState<string>("Khu vực chung");
@@ -20,7 +31,9 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
 
   const presets = React.useMemo(() => {
     const builtIn = ["Khu vực chung", "Tầng 1", "Tầng 2", "Sân vườn", "VIP"];
-    const existing = (existingLocations || []).map((x) => x?.trim()).filter(Boolean) as string[];
+    const existing = (existingLocations || [])
+      .map((x) => x?.trim())
+      .filter(Boolean) as string[];
     return Array.from(new Set([...builtIn, ...existing]));
   }, [existingLocations]);
 
@@ -33,14 +46,18 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
     try {
       const location =
         locationPreset === "__custom__"
-          ? (customLocation.trim() || "Khu vực chung")
-          : (locationPreset || "Khu vực chung");
+          ? customLocation.trim() || "Khu vực chung"
+          : locationPreset || "Khu vực chung";
 
-      await apiClient.post(`/tables`, { name, capacity, location });
+      await tableApi.createTable({ name, capacity, location });
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data || "Không thể tạo bàn. Vui lòng thử lại.");
+      setError(
+        err.response?.data?.message ||
+          err.response?.data ||
+          "Không thể tạo bàn. Vui lòng thử lại.",
+      );
     } finally {
       setLoading(false);
     }
@@ -48,7 +65,13 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
 
   return createPortal(
     <div className="fixed inset-0 z-[999] flex justify-center items-start md:items-center overflow-y-auto p-4 md:p-8 font-sans">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -61,11 +84,17 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
               <LayoutDashboard className="w-5 h-5 text-brand-purple" />
               Tạo Bàn mới
             </h2>
-            <button onClick={onClose} className="p-1 px-1.5 text-brand-gray hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-md transition-all">
+            <button
+              onClick={onClose}
+              aria-label="Đóng"
+              className="p-1 px-1.5 text-brand-gray hover:text-white bg-white/[0.05] hover:bg-white/[0.1] rounded-md transition-all"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs text-brand-gray font-medium">Bố trí thêm bàn vào không gian quán của bạn.</p>
+          <p className="text-xs text-brand-gray font-medium">
+            Bố trí thêm bàn vào không gian quán của bạn.
+          </p>
         </div>
 
         <div className="px-8 py-8">
@@ -85,12 +114,14 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1 flex items-center gap-2">Tên Bàn</label>
+              <label className="text-[10px] font-bold text-brand-gray uppercase tracking-widest ml-1 flex items-center gap-2">
+                Tên Bàn
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-white"
+                className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-[#3d342c] text-white"
                 placeholder="VD: Bàn VIP 01"
                 required
               />
@@ -107,7 +138,7 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
                   min={1}
                   value={capacity}
                   onChange={(e) => setCapacity(parseInt(e.target.value) || 2)}
-                  className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-white"
+                  className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-[#3d342c] text-white"
                   required
                 />
               </div>
@@ -119,15 +150,28 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
                 </label>
                 <select
                   value={locationPreset}
-                  onChange={(e) => setLocationPreset(e.target.value)}
-                  className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all text-white"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setLocationPreset(value);
+                    if (value !== "__custom__") setCustomLocation("");
+                  }}
+                  className="w-full bg-[#0f0c0a] border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all text-white"
                 >
                   {presets.map((loc) => (
-                    <option key={loc} value={loc}>
+                    <option
+                      key={loc}
+                      value={loc}
+                      className="bg-[#0f0c0a] text-white"
+                    >
                       {loc}
                     </option>
                   ))}
-                  <option value="__custom__">Tạo khu vực mới...</option>
+                  <option
+                    value="__custom__"
+                    className="bg-[#0f0c0a] text-white"
+                  >
+                    Tạo khu vực mới...
+                  </option>
                 </select>
 
                 {locationPreset === "__custom__" && (
@@ -135,14 +179,18 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
                     type="text"
                     value={customLocation}
                     onChange={(e) => setCustomLocation(e.target.value)}
-                    className="mt-2 w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-[#31343e] text-white"
+                    className="mt-2 w-full bg-black/40 border border-white/[0.08] rounded-xl px-4 py-3 text-sm focus:border-brand-purple outline-none transition-all placeholder:text-[#3d342c] text-white"
                     placeholder="Nhập khu vực mới (VD: Phòng lạnh)"
                   />
                 )}
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full btn-primary mt-2 flex items-center justify-center gap-2 py-3.5">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary mt-2 flex items-center justify-center gap-2 py-3.5"
+            >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               Tạo bàn
             </button>
@@ -153,4 +201,3 @@ export const CreateTableModal: React.FC<CreateTableModalProps> = ({ onClose, onS
     document.body,
   );
 };
-
