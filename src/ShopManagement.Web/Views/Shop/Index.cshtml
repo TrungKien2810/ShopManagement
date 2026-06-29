@@ -1,0 +1,83 @@
+@model List<ShopManagement.Web.Models.ShopListItemViewModel>
+@{
+    ViewData["Title"] = "Cửa hàng của tôi";
+}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+    <div>
+        <h1 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 28px; color: var(--color-primary);">Cửa hàng của tôi</h1>
+        <p style="color: var(--color-warm-gray); margin: 4px 0 0; font-size: 14px;">Quản lý danh sách các cửa hàng / nhà hàng bạn đang sở hữu hoặc là thành viên.</p>
+    </div>
+    <a asp-action="Create" class="btn-primary" style="border-radius: 8px; font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; text-decoration: none;">
+        <span class="material-symbols-outlined" style="font-size: 18px; font-weight: bold;">add</span>
+        <span>+ Tạo quán mới</span>
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="linear-card" style="text-align:center; padding:64px 32px; border: 2px dashed var(--border-normal); background: var(--color-bg-surface); border-radius: 16px;">
+        <span class="material-symbols-outlined" style="font-size: 64px; color: var(--color-warm-gray); opacity: 0.3; margin-bottom: 16px; display: block;">store</span>
+        <h3 style="margin: 0 0 8px; font-weight: 700;">Chưa thuộc cửa hàng nào</h3>
+        <p style="color: var(--color-warm-gray); max-width: 380px; margin: 0 auto 24px; font-size: 14px;">Hãy tạo cửa hàng đầu tiên của bạn để thiết lập sơ đồ bàn và bắt đầu bán hàng.</p>
+        <a asp-action="Create" class="btn-primary" style="text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: 700;">+ Tạo quán mới</a>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var shop in Model)
+        {
+            <div class="col-lg-4 col-md-6 col-12">
+                <div class="linear-card" style="background: #ffffff; border: 1px solid @(shop.IsCurrent ? "var(--color-primary)" : "var(--border-normal)"); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: @(shop.IsCurrent ? "0 8px 30px rgba(230, 58, 0, 0.12)" : "var(--shadow-linear)"); position: relative;"
+                     onmouseover="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 12px 30px rgba(230, 58, 0, 0.15)';"
+                     onmouseout="this.style.borderColor='@(shop.IsCurrent ? "var(--color-primary)" : "var(--border-normal)")'; this.style.boxShadow='@(shop.IsCurrent ? "0 8px 30px rgba(230, 58, 0, 0.12)" : "var(--shadow-linear)")';">
+
+                    @if (shop.IsCurrent)
+                    {
+                        <div style="position: absolute; top: -1px; left: 24px; background: var(--color-primary); color: #fff; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 12px; border-radius: 0 0 6px 6px;">
+                            Đang hoạt động
+                        </div>
+                    }
+
+                    <div style="display: flex; gap: 16px; align-items: flex-start; margin-top: @(shop.IsCurrent ? "8px" : "0");">
+                        <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(230, 58, 0, 0.06); border: 1px solid rgba(230, 58, 0, 0.15); display: flex; align-items: center; justify-content: center; color: var(--color-primary); flex-shrink: 0;">
+                            <span class="material-symbols-outlined" style="font-size: 24px;">storefront</span>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0 0 6px; font-family: var(--font-body); font-weight: 700; font-size: 18px; color: var(--color-warm-white); line-height: 1.25;">@shop.Name</h3>
+                            <span class="badge badge-pending" style="background: rgba(230, 58, 0, 0.1); color: var(--color-primary); border: 1px solid rgba(230, 58, 0, 0.2); font-size: 11px; padding: 2px 8px;">
+                                @shop.Role
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; border-top: 1px solid var(--border-normal); padding-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+                        @if (shop.IsCurrent)
+                        {
+                            <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #22c55e; font-weight: 600;">
+                                <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; box-shadow: 0 0 8px #22c55e;"></span>
+                                Đang chọn làm việc
+                            </span>
+                            <a asp-controller="Home" asp-action="Index" class="btn-secondary" style="padding: 6px 14px; font-size: 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                                Vào Dashboard
+                                <span class="material-symbols-outlined" style="font-size: 14px;">arrow_forward</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span style="font-size: 13px; color: var(--color-warm-gray); font-weight: 500;">
+                                Chưa chọn
+                            </span>
+                            <form asp-action="Select" asp-route-id="@shop.Id" method="post" style="margin: 0;">
+                                <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                                    Chọn cửa hàng
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,65 @@
+@model List<ShopManagement.Web.Models.TableAreaOption>
+@{
+    ViewData["Title"] = "Khu vực bàn";
+}
+
+<h1>Khu vực bàn</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="linear-card" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); color:#ef4444; margin-bottom:16px;">@TempData["Error"]</div>
+}
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="linear-card">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="text-align:left; border-bottom:1px solid var(--border-subtle);">
+                        <th style="padding:8px 4px;">Tên khu vực</th>
+                        <th style="padding:8px 4px;">Trạng thái</th>
+                        <th style="padding:8px 4px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var area in Model)
+                    {
+                        <tr style="border-bottom:1px solid var(--border-subtle);">
+                            <td style="padding:8px 4px;">@area.Name</td>
+                            <td style="padding:8px 4px;">
+                                <span class="badge @(area.IsActive ? "badge-available" : "badge-pending")">@(area.IsActive ? "Hoạt động" : "Đã ẩn")</span>
+                            </td>
+                            <td style="padding:8px 4px; display:flex; gap:6px;">
+                                <form asp-action="ToggleArea" asp-route-id="@area.Id" method="post">
+                                    <button type="submit" class="btn-secondary" style="padding:4px 10px;">@(area.IsActive ? "Ẩn" : "Bật")</button>
+                                </form>
+                                <form asp-action="DeleteArea" asp-route-id="@area.Id" method="post" data-confirm="Bạn có chắc chắn muốn xóa khu vực này? Các bàn thuộc khu vực này sẽ được giữ lại nhưng sẽ không thuộc khu vực nào.">
+                                    <input type="hidden" name="deleteMode" value="keepTables" />
+                                    <button type="submit" class="btn-secondary" style="padding:4px 10px; color:#ef4444;">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="linear-card">
+            <h4>Thêm khu vực</h4>
+            <form asp-action="CreateArea" method="post" style="margin-top:12px;">
+                <div class="mb-3">
+                    <label class="form-label">Tên khu vực</label>
+                    <input name="Name" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Thứ tự</label>
+                    <input name="SortOrder" type="number" class="form-control" value="0" />
+                </div>
+                <button type="submit" class="btn-primary">Thêm</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn-secondary" style="margin-top:20px; display:inline-block;">← Về sơ đồ bàn</a>

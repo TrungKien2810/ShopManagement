@@ -1,0 +1,145 @@
+@model IEnumerable<ShopManagement.Application.DTOs.Menu.CategoryDto>
+@{
+    ViewData["Title"] = "Thực đơn";
+}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+    <div>
+        <h1 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 28px; color: var(--color-primary);">Thực đơn nhà hàng</h1>
+        <p style="color: var(--color-warm-gray); margin: 4px 0 0; font-size: 14px;">Quản lý các danh mục món ăn, thiết lập giá bán và trạng thái sẵn sàng phục vụ.</p>
+    </div>
+    <div style="display:flex; gap:12px;">
+        <a asp-action="CreateCategory" class="btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 10px 18px; display: flex; align-items: center; gap: 8px; text-decoration: none;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">folder_open</span>
+            <span>+ Danh mục</span>
+        </a>
+        <a asp-action="CreateProduct" class="btn-primary" style="border-radius: 8px; font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; text-decoration: none;">
+            <span class="material-symbols-outlined" style="font-size: 18px; font-weight: bold;">add</span>
+            <span>+ Món ăn</span>
+        </a>
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="linear-card" style="border-color: rgba(239,68,68,0.3); margin-bottom:24px; padding: 14px 20px; background: rgba(239,68,68,0.08); color: #ef4444; border-radius: 12px; font-weight: 500;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">error</span>
+            <span>@TempData["Error"]</span>
+        </div>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="linear-card" style="text-align:center; padding:64px 32px; border: 2px dashed var(--border-normal); background: var(--color-bg-surface); border-radius: 16px;">
+        <span class="material-symbols-outlined" style="font-size: 64px; color: var(--color-warm-gray); opacity: 0.3; margin-bottom: 16px; display: block;">restaurant_menu</span>
+        <h3 style="margin: 0 0 8px; font-weight: 700;">Chưa có thực đơn</h3>
+        <p style="color: var(--color-warm-gray); max-width: 380px; margin: 0 auto 24px; font-size: 14px;">Bắt đầu bằng việc tạo danh mục đầu tiên (như Khai vị, Món chính) để sắp xếp món ăn.</p>
+        <a asp-action="CreateCategory" class="btn-primary" style="text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: 700;">+ Tạo danh mục</a>
+    </div>
+}
+
+@foreach (var category in Model)
+{
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 40px 0 16px; border-bottom: 1px solid var(--border-normal); padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 22px;">folder</span>
+            <h3 style="margin:0; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--color-warm-white);">
+                @category.Name 
+                <span style="font-size:13px; font-weight:500; color: var(--color-warm-gray); margin-left: 8px; font-family: var(--font-body);">(@category.Products.Count() món ăn)</span>
+            </h3>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <a asp-action="EditCategory" asp-route-id="@category.Id" class="btn-secondary" style="padding:6px 14px; font-size:12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                <span class="material-symbols-outlined" style="font-size: 14px;">edit</span>
+                Sửa nhóm
+            </a>
+            <form asp-action="DeleteCategory" asp-route-id="@category.Id" method="post" data-confirm="Bạn có chắc chắn muốn xóa danh mục này? Tất cả các món ăn thuộc danh mục này cũng sẽ mất phân loại." style="margin: 0;">
+                <button type="submit" class="btn-secondary" style="padding:6px 14px; font-size:12px; border-radius: 6px; color:#ef4444; border-color: rgba(239,68,68,0.25); display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-outlined" style="font-size: 14px; color: inherit;">delete</span>
+                    Xóa nhóm
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var p in category.Products)
+        {
+            <div class="col-xl-3 col-lg-4 col-sm-6 col-12">
+                <div class="linear-card" style="background: #ffffff; border: 1px solid var(--border-normal); border-radius: 14px; display:flex; flex-direction:column; justify-content:space-between; min-height:330px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow:hidden; padding: 0;"
+                     onmouseover="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 12px 30px rgba(230, 58, 0, 0.12)'; this.querySelector('.dish-img')?.style.setProperty('transform', 'scale(1.06)')"
+                     onmouseout="this.style.borderColor='var(--border-normal)'; this.style.boxShadow='var(--shadow-linear)'; this.querySelector('.dish-img')?.style.setProperty('transform', 'scale(1)')">
+
+                    <!-- Top section with Image -->
+                    <div style="position:relative; width:100%; height:150px; overflow:hidden; background:var(--color-bg-surface); display:flex; align-items:center; justify-content:center; border-bottom: 1px solid var(--border-normal);">
+                        @if (!string.IsNullOrEmpty(p.ImageUrl))
+                        {
+                            <img src="@p.ImageUrl" class="dish-img" style="width:100%; height:100%; object-fit:cover; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);" />
+                        }
+                        else
+                        {
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.4;">
+                                <span class="material-symbols-outlined" style="font-size: 40px; color: var(--color-warm-gray);">restaurant</span>
+                            </div>
+                        }
+
+                        <!-- Category Tag absolute over image -->
+                        <div style="position:absolute; top:12px; left:12px; z-index: 10;">
+                            <span style="background: rgba(12, 10, 9, 0.75); color: var(--color-primary); border: 1px solid rgba(255, 200, 128, 0.25); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 9999px; backdrop-filter: blur(8px); display: inline-block;">
+                                @category.Name
+                            </span>
+                        </div>
+
+                        <!-- Out of Stock Overlay -->
+                        @if (!p.IsAvailable)
+                        {
+                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 20;">
+                                <span style="color: #fb7185; border: 1.5px solid #fb7185; padding: 6px 14px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; transform: rotate(-8deg); border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">HẾT HÀNG</span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Bottom section with contents -->
+                    <div style="padding: 18px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; gap: 14px;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px;">
+                                <h4 style="font-size: 16px; margin: 0; font-family: var(--font-body); font-weight: 700; line-height: 1.35; color: var(--color-warm-white); height: 44px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" title="@p.Name">
+                                    @p.Name
+                                </h4>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: var(--color-amber); font-weight: 800; font-size: 16px; font-family: var(--font-display);">@p.Price.ToString("N0") đ</span>
+                                
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 11px; color: var(--color-warm-gray); font-weight: 600;">Trạng thái</span>
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: @(p.IsAvailable ? "#22c55e" : "#ef4444"); @(p.IsAvailable ? "box-shadow: 0 0 8px #22c55e;" : "")"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions bar -->
+                        <div style="display:flex; gap:6px; border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: auto;">
+                            <a asp-action="EditProduct" asp-route-id="@p.Id" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; flex: 1; min-height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none;">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">edit</span>
+                                Sửa
+                            </a>
+                            <form asp-action="ToggleAvailability" asp-route-id="@p.Id" method="post" style="flex: 1; margin: 0;">
+                                <button type="submit" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; width: 100%; min-height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; color: @(p.IsAvailable ? "var(--color-warm-gray)" : "var(--color-primary)"); border-color: @(p.IsAvailable ? "" : "rgba(255,200,128,0.2)");">
+                                    <span class="material-symbols-outlined" style="font-size: 14px;">@(p.IsAvailable ? "visibility_off" : "visibility")</span>
+                                    @(p.IsAvailable ? "Ẩn món" : "Mở bán")
+                                </button>
+                            </form>
+                            <form asp-action="DeleteProduct" asp-route-id="@p.Id" method="post" data-confirm="Bạn có chắc chắn muốn xóa món ăn này khỏi thực đơn?" style="margin:0;">
+                                <button type="submit" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-height: 32px; border-radius: 6px; color:#ef4444; border-color: rgba(239,68,68,0.2); display: flex; align-items: center; justify-content: center;" title="Xóa món ăn">
+                                    <span class="material-symbols-outlined" style="font-size: 14px; color: inherit;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

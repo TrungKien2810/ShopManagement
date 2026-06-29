@@ -1,0 +1,52 @@
+@model ShopManagement.Web.Models.CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh toán";
+}
+
+<h1>Thanh toán - Bàn @Model.TableName</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="linear-card" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); color:#ef4444; margin-bottom:16px;">@TempData["Error"]</div>
+}
+
+<div class="linear-card" style="max-width:560px;">
+    <table class="table" style="width:100%; margin-bottom:16px;">
+        <thead>
+            <tr>
+                <th>Món</th>
+                <th style="text-align:center;">SL</th>
+                <th style="text-align:right;">Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td style="text-align:center;">@item.Quantity</td>
+                    <td style="text-align:right;">@item.LineTotal.ToString("N0") đ</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div style="display:flex; justify-content:space-between; font-weight:700; font-size:20px; border-top:1px solid var(--border-normal); padding-top:12px; margin-bottom:20px;">
+        <span>Tổng cộng</span>
+        <span style="color: var(--color-amber);">@Model.TotalAmount.ToString("N0") đ</span>
+    </div>
+
+    <form asp-action="Confirm" method="post">
+        <input type="hidden" name="orderId" value="@Model.OrderId" />
+        <div class="mb-3">
+            <label class="form-label">Phương thức thanh toán</label>
+            <select name="method" class="form-select">
+                <option value="Cash">Tiền mặt</option>
+                <option value="Transfer">Chuyển khoản</option>
+                <option value="Card">Thẻ</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;">Xác nhận thanh toán</button>
+    </form>
+    <a asp-controller="Order" asp-action="Index" asp-route-tableId="@Model.TableId" class="btn-secondary" style="display:block; text-align:center; margin-top:10px;">&larr; Quay lại đơn hàng</a>
+</div>

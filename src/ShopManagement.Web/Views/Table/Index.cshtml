@@ -1,0 +1,493 @@
+@model ShopManagement.Web.Models.TableBoardViewModel
+@using ShopManagement.Domain.Enums
+@{
+    ViewData["Title"] = "Sơ đồ bàn";
+}
+
+<!-- Slide-out Sidebar details panel -->
+<div id="sidebarOverlay"></div>
+<div id="detailSidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-normal); padding-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 24px;">table_restaurant</span>
+            <h3 id="sb-table-name" style="margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 800;">Tên bàn</h3>
+        </div>
+        <button id="closeSidebarBtn" style="background: none; border: none; color: var(--color-warm-gray); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%;" onmouseover="this.style.color='var(--color-warm-white)'" onmouseout="this.style.color='var(--color-warm-gray)'">
+            <span class="material-symbols-outlined" style="font-size: 24px;">close</span>
+        </button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="sidebarLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; gap: 12px;">
+        <div style="width: 32px; height: 32px; border: 3px solid rgba(230,58,0,0.1); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <span style="font-size: 13px; color: var(--color-warm-gray);">Đang tải dữ liệu...</span>
+    </div>
+
+    <!-- Sidebar content -->
+    <div id="sidebarContent" style="display: none; flex-direction: column; flex-grow: 1; justify-content: space-between; overflow-y: auto; padding-right: 4px;">
+        <div>
+            <!-- Table Status Info Card -->
+            <div class="linear-card" style="background: var(--color-bg-surface); border: 1px solid var(--border-normal); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 13px; color: var(--color-warm-gray); font-weight: 600;">Trạng thái</span>
+                    <span id="sb-status-badge" class="badge">Trạng thái</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                    <div>
+                        <span style="color: var(--color-warm-gray); display: block; margin-bottom: 2px;">Sức chứa</span>
+                        <strong id="sb-capacity" style="color: var(--color-warm-white);">4 ghế</strong>
+                    </div>
+                    <div>
+                        <span style="color: var(--color-warm-gray); display: block; margin-bottom: 2px;">Vị trí / Khu vực</span>
+                        <strong id="sb-location" style="color: var(--color-warm-white);">Tầng 1</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Order details -->
+            <div id="sb-order-info" style="display: none; margin-bottom: 24px;">
+                <h4 style="margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--color-warm-white); display: flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-amber);">receipt_long</span>
+                    Đơn hàng hiện tại
+                </h4>
+                <div style="font-size: 12px; color: var(--color-warm-gray); margin-bottom: 12px; display: flex; justify-content: space-between; background: var(--color-bg-surface); padding: 8px 12px; border-radius: 6px;">
+                    <span>Giờ vào bàn</span>
+                    <strong id="sb-checkin-time" style="color: var(--color-warm-white);">18:00</strong>
+                </div>
+
+                <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border-normal); border-radius: 8px; background: var(--color-bg-surface); padding: 0 12px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <tbody id="sb-order-items">
+                            <!-- Items populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; padding: 16px; background: rgba(230, 58, 0, 0.04); border: 1px solid rgba(230, 58, 0, 0.12); border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 12px; color: var(--color-warm-gray); letter-spacing: 0.04em;">TỔNG CỘNG ĐƠN:</span>
+                    <strong id="sb-total-amount" style="font-size: 24px; color: var(--color-ember); font-family: var(--font-display); font-weight: 900;">0 đ</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action buttons section -->
+        <div id="sb-actions" style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-normal);">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:16px;">
+    <div>
+        <h1 style="margin:0; font-family:var(--font-display); font-size:32px; font-weight:900;">Sơ đồ bàn</h1>
+        <p style="color:var(--color-warm-gray); margin:6px 0 0; font-size:14px; font-weight:500;">Theo dõi trạng thái các bàn ăn theo thời gian thực và quản lý đặt bàn.</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <a asp-action="Areas" class="btn-secondary" style="border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; min-height:40px; display:flex; align-items:center; gap:6px; text-decoration: none;">
+            <span class="material-symbols-outlined" style="font-size:18px;">layers</span>
+            <span>Khu vực</span>
+        </a>
+        <a asp-action="Create" class="btn-primary" style="border-radius:8px; padding:10px 18px; font-size:13px; font-weight:700; min-height:40px; display:flex; align-items:center; gap:6px; text-decoration: none;">
+            <span class="material-symbols-outlined" style="font-size:18px;">add_box</span>
+            <span>Thêm bàn</span>
+        </a>
+    </div>
+</div>
+
+<div style="display:flex; gap:20px; margin: 12px 0 28px; font-size:13px; color:var(--color-warm-gray); flex-wrap:wrap; align-items:center; background:var(--color-bg-surface); padding:12px 18px; border-radius:10px; border:1px solid var(--color-border-copper);">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--color-emerald); display:inline-block; box-shadow:0 0 10px var(--color-emerald);"></span>
+        <span style="font-weight:600; color:var(--color-warm-white);">Trống (Available)</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--color-ember); display:inline-block; box-shadow:0 0 10px var(--color-ember);"></span>
+        <span style="font-weight:600; color:var(--color-warm-white);">Đang dùng (In Use)</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--color-amber); display:inline-block; box-shadow:0 0 10px var(--color-amber);"></span>
+        <span style="font-weight:600; color:var(--color-warm-white);">Chờ xử lý (Pending)</span>
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="linear-card" style="border-color: rgba(239,68,68,0.3); margin-bottom:16px; padding: 12px 18px; background:rgba(239,68,68,0.08); color:#ef4444; border-radius:10px;">
+        @TempData["Error"]
+    </div>
+}
+
+@if (!Model.Groups.Any())
+{
+    <div class="linear-card" style="text-align:center; padding:48px;">
+        <span class="material-symbols-outlined" style="font-size:48px; color:var(--color-warm-gray); margin-bottom:12px;">table_restaurant</span>
+        <p class="text-muted" style="margin-bottom:16px;">Chưa có bàn nào. Hãy thêm bàn đầu tiên để bắt đầu bán hàng.</p>
+        <a asp-action="Create" class="btn-primary" style="min-height:40px; padding:8px 16px; text-decoration: none;">+ Thêm bàn mới</a>
+    </div>
+}
+
+@foreach (var group in Model.Groups)
+{
+    <h4 style="margin:32px 0 16px; font-family:var(--font-display); font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px;">
+        <span class="material-symbols-outlined" style="color:var(--color-amber); font-size:22px;">layers</span>
+        <span>@group.AreaName</span>
+        <span style="flex-grow:1; height:1px; background:var(--border-normal); margin-left:12px;"></span>
+    </h4>
+    <div class="row g-3">
+        @foreach (var t in group.Tables)
+        {
+            var badgeClass = t.Status switch
+            {
+                TableStatus.Available => "badge-available",
+                TableStatus.InUse => "badge-occupied animate-pulse-border",
+                _ => "badge-pending animate-pulse-border"
+            };
+            
+            var glowClass = t.Status switch
+            {
+                TableStatus.Available => "glow-emerald",
+                TableStatus.InUse => "glow-ember",
+                _ => "glow-amber"
+            };
+
+            var statusLabel = t.Status switch
+            {
+                TableStatus.Available => "Trống",
+                TableStatus.InUse => "Đang dùng",
+                _ => "Chờ"
+            };
+            
+            <div class="col-md-3 col-sm-4 col-6">
+                <div class="linear-card table-card @glowClass" data-table-id="@t.Id" 
+                     style="cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; min-height:220px; position:relative; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 16px;">
+                    
+                    <!-- Header Card -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; width: 100%;">
+                        <div style="font-size: 11px; color: var(--color-warm-gray); display:flex; align-items:center; gap:4px; font-weight:600;">
+                            <span class="material-symbols-outlined" style="font-size:14px;">chair</span>
+                            <span>@t.Capacity ghế</span>
+                        </div>
+                        <span class="badge @badgeClass" style="padding: 2px 8px; font-size: 9px;">@statusLabel</span>
+                    </div>
+
+                    <!-- 2D Pub Table Visual Representation -->
+                    <div class="pub-table-container">
+                        <div class="pub-table-view">
+                            @for (int i = 0; i < t.Capacity; i++)
+                            {
+                                var seatPositionClass = "";
+                                if (t.Capacity <= 2)
+                                {
+                                    seatPositionClass = i == 0 ? "seat-top" : "seat-bottom";
+                                }
+                                else if (t.Capacity <= 4)
+                                {
+                                    seatPositionClass = i == 0 ? "seat-top" : i == 1 ? "seat-bottom" : i == 2 ? "seat-left" : "seat-right";
+                                }
+                                else
+                                {
+                                    seatPositionClass = i == 0 ? "seat-top-left" : i == 1 ? "seat-top-right" : i == 2 ? "seat-bottom-left" : i == 3 ? "seat-bottom-right" : i == 4 ? "seat-left" : "seat-right";
+                                }
+                                
+                                var seatStatusClass = t.Status switch
+                                {
+                                    TableStatus.Available => "available",
+                                    TableStatus.InUse => "in-use",
+                                    _ => "pending"
+                                };
+                                <div class="pub-seat @seatPositionClass @seatStatusClass"></div>
+                            }
+                            <div class="pub-table-body @(t.Capacity > 4 ? "square" : "") @(t.Status switch {
+                                TableStatus.Available => "available",
+                                TableStatus.InUse => "in-use",
+                                _ => "pending"
+                            })">
+                                @t.Name
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(t.Location))
+                        {
+                            <span style="font-size:10px; color:var(--color-warm-gray); display:flex; align-items:center; gap:2px; font-weight:500; margin-top:2px;">
+                                <span class="material-symbols-outlined" style="font-size:12px; color:var(--color-amber);">location_on</span>
+                                <span>@t.Location</span>
+                            </span>
+                        }
+                    </div>
+
+                    <!-- Actions Panel (Overlay on hover, or compact flex) -->
+                    <div style="display:flex; gap:6px; width: 100%; border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: 4px; position:relative; z-index:2;">
+                        @if (t.Status == TableStatus.Available)
+                        {
+                            <form asp-action="Open" asp-route-id="@t.Id" method="post" id="open-form-@t.Id" style="margin:0; flex:1;">
+                                <button type="submit" class="btn-primary" style="width:100%; padding:4px 8px; font-size:11px; min-height:30px; border-radius:6px; font-weight:700;" onclick="event.stopPropagation();">Mở bàn</button>
+                            </form>
+                        }
+                        <a asp-action="Edit" asp-route-id="@t.Id" class="btn-secondary" style="padding:4px 8px; font-size:11px; min-height:30px; border-radius:6px; font-weight:700; text-decoration: none; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation();">Sửa</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    #detailSidebar {
+        position: fixed;
+        top: 0;
+        right: -420px;
+        width: 400px;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-left: 1px solid var(--border-normal);
+        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.12);
+        z-index: 1050;
+        transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: flex;
+        flex-direction: column;
+        padding: 28px;
+        border-radius: 24px 0 0 24px;
+    }
+    #detailSidebar.open {
+        right: 0;
+    }
+    #sidebarOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1040;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(3px);
+    }
+    #sidebarOverlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
+    <script>
+        // Connect real-time hub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/shop")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("OrderUpdated", function () {
+            location.reload();
+        });
+
+        connection.start()
+            .then(() => console.log("SignalR Connected to /hubs/shop"))
+            .catch(err => console.error(err));
+
+        $(document).ready(function() {
+            // Click card to open drawer
+            $('.table-card').on('click', function(e) {
+                if ($(e.target).closest('button, a, form').length) {
+                    return;
+                }
+                var tableId = $(this).data('table-id');
+                openSidebar(tableId);
+            });
+
+            $('#sidebarOverlay, #closeSidebarBtn').on('click', function() {
+                closeSidebar();
+            });
+
+            function openSidebar(tableId) {
+                $('#sidebarLoading').show();
+                $('#sidebarContent').hide();
+                $('#detailSidebar').addClass('open');
+                $('#sidebarOverlay').addClass('open');
+
+                $.ajax({
+                    url: '@Url.Action("GetDetails", "Table")/' + tableId,
+                    type: 'GET',
+                    success: function(data) {
+                        populateSidebar(data);
+                        $('#sidebarLoading').hide();
+                        $('#sidebarContent').fadeIn(200);
+                    },
+                    error: function(err) {
+                        console.error(err);
+                        $('#sidebarLoading').html('<p style="color:#ef4444; text-align:center; padding:24px;">Lỗi tải dữ liệu bàn.</p>');
+                    }
+                });
+            }
+
+            function closeSidebar() {
+                $('#detailSidebar').removeClass('open');
+                $('#sidebarOverlay').removeClass('open');
+            }
+
+            function populateSidebar(table) {
+                $('#sb-table-name').text(table.name);
+                
+                // Status Badge
+                var statusBadge = $('#sb-status-badge');
+                statusBadge.removeClass('badge-available badge-occupied badge-pending');
+                if (table.status === 'Available') {
+                    statusBadge.addClass('badge-available').text('Trống');
+                } else if (table.status === 'InUse') {
+                    statusBadge.addClass('badge-occupied').text('Đang dùng');
+                } else {
+                    statusBadge.addClass('badge-pending').text('Chờ xử lý');
+                }
+
+                // Details info
+                $('#sb-capacity').text(table.capacity + ' ghế');
+                $('#sb-location').text(table.location || 'Chưa cấu hình');
+
+                var actionsDiv = $('#sb-actions');
+                actionsDiv.empty();
+
+                var orderDiv = $('#sb-order-info');
+                orderDiv.hide();
+
+                if (table.status === 'Available') {
+                    var openUrl = '@Url.Action("Open", "Table")/' + table.id;
+                    var openFormHtml = `
+                        <form action="${openUrl}" method="post" style="margin: 0;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-primary" style="width:100%; padding:12px; font-weight:700; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; border:none; margin-bottom:12px; cursor:pointer;">
+                                <span class="material-symbols-outlined">play_arrow</span>
+                                Mở bàn phục vụ khách
+                            </button>
+                        </form>
+                    `;
+                    actionsDiv.append(openFormHtml);
+                } else {
+                    if (table.activeOrder) {
+                        orderDiv.show();
+                        $('#sb-checkin-time').text(table.activeOrder.checkInTime);
+                        
+                        var itemsTbody = $('#sb-order-items');
+                        itemsTbody.empty();
+                        
+                        if (table.activeOrder.items.length === 0) {
+                             itemsTbody.append('<tr><td colspan="3" style="text-align:center; padding:24px; color:var(--color-warm-gray); font-size: 13px;">Chưa gọi món nào.</td></tr>');
+                        } else {
+                            table.activeOrder.items.forEach(function(item) {
+                                var badgeLabel = 'Đang làm';
+                                var badgeClass = 'badge-pending';
+                                
+                                if (item.status === 'NeedsApproval') {
+                                    badgeLabel = 'Cần duyệt';
+                                    badgeClass = 'badge-pending animate-pulse-border';
+                                } else if (item.status === 'Served') {
+                                    badgeLabel = 'Đã lên bàn';
+                                    badgeClass = 'badge-available';
+                                } else if (item.status === 'Cancelled') {
+                                    badgeLabel = 'Đã hủy';
+                                    badgeClass = 'badge-cancelled';
+                                }
+
+                                var statusBadgeHtml = `<span class="badge ${badgeClass}" style="font-size:9px; padding:2px 6px;">${badgeLabel}</span>`;
+
+                                itemsTbody.append(`
+                                    <tr style="border-bottom:1px solid var(--border-subtle);">
+                                        <td style="padding:12px 0;">
+                                            <div style="font-weight:700; color:var(--color-warm-white); font-size:13px;">${item.productName}</div>
+                                            <div style="font-size:11px; color:var(--color-warm-gray); margin-top:2px;">${item.quantity} phần x ${item.unitPrice.toLocaleString('en-US')}đ</div>
+                                        </td>
+                                        <td style="padding:12px 0; text-align:center; vertical-align:middle;">${statusBadgeHtml}</td>
+                                        <td style="padding:12px 0; text-align:right; vertical-align:middle; font-weight:700; color:var(--color-amber); font-size:13px;">${item.total.toLocaleString('en-US')} đ</td>
+                                    </tr>
+                                `);
+                            });
+                        }
+
+                        $('#sb-total-amount').text(table.activeOrder.totalAmount.toLocaleString('en-US') + ' đ');
+
+                        var viewOrderUrl = '@Url.Action("Index", "Order")?tableId=' + table.id;
+                        var checkoutUrl = '@Url.Action("Checkout", "Payment")?orderId=' + table.activeOrder.id;
+                        var resetUrl = '@Url.Action("Reset", "Table")/' + table.id;
+
+                        var activeActionsHtml = `
+                            <div style="display:flex; gap:10px; margin-bottom:14px;">
+                                <a href="${viewOrderUrl}" class="btn-primary" style="flex:1; padding:12px; font-weight:700; border-radius:12px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; border:none; text-align:center; min-height:44px;">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">restaurant_menu</span>
+                                    Gọi món
+                                </a>
+                                <a href="${checkoutUrl}" class="btn-primary" style="flex:1; padding:12px; font-weight:700; border-radius:12px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; text-align:center; min-height:44px;">
+                                    <span class="material-symbols-outlined" style="font-size:18px; color:inherit;">payments</span>
+                                    Thanh toán
+                                </a>
+                            </div>
+                            <form action="${resetUrl}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn Reset bàn này? Tất cả các món ăn chưa thanh toán sẽ được dọn sạch.');" style="margin: 0;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-secondary" style="width:100%; padding:10px; font-weight:700; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; color:#ef4444; border-color:rgba(239,68,68,0.25); margin-bottom:16px; cursor:pointer; min-height:44px; background:rgba(239,68,68,0.04);">
+                                    <span class="material-symbols-outlined" style="font-size:18px; color:inherit;">refresh</span>
+                                    Reset dọn bàn trống
+                                </button>
+                            </form>
+                        `;
+                        actionsDiv.append(activeActionsHtml);
+
+                        // Populate Transfer dropdown from available tables in DOM
+                        var availableTables = [];
+                        $('.table-card').each(function() {
+                            var badge = $(this).find('.badge');
+                            if (badge.text().trim().indexOf('Trống') >= 0 || badge.hasClass('badge-available')) {
+                                availableTables.push({
+                                    id: $(this).data('table-id'),
+                                    name: $(this).find('h4').text().trim()
+                                });
+                            }
+                        });
+
+                        if (availableTables.length > 0) {
+                            var transferUrl = '@Url.Action("Transfer", "Table")';
+                            var selectOptions = availableTables.map(function(t) {
+                                return `<option value="${t.id}">${t.name}</option>`;
+                            }).join('');
+
+                            var transferHtml = `
+                                <div style="border-top:1px solid var(--border-normal); padding-top:16px; margin-top:16px;">
+                                    <h5 style="margin:0 0 10px; font-weight:700; font-size:14px; color:var(--color-warm-white); display:flex; align-items:center; gap:6px;">
+                                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--color-primary);">move_down</span>
+                                        Chuyển bàn khách ngồi
+                                    </h5>
+                                    <form action="${transferUrl}" method="post" style="margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="fromId" value="${table.id}" />
+                                        <div style="display:flex; gap:8px; align-items:center;">
+                                            <select name="toId" class="form-control" style="flex-grow:1; height:38px; cursor:pointer;">
+                                                ${selectOptions}
+                                            </select>
+                                            <button type="submit" class="btn-secondary" style="padding:8px 16px; font-size:12px; min-height:38px; border-radius:8px; font-weight:700; cursor:pointer;">Chuyển</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            `;
+                            actionsDiv.append(transferHtml);
+                        }
+                    }
+                }
+
+                var editUrl = '@Url.Action("Edit", "Table")/' + table.id;
+                var editBtnHtml = `
+                    <div style="margin-top:12px;">
+                        <a href="${editUrl}" class="btn-secondary" style="width:100%; padding:10px; font-weight:700; border-radius:8px; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; text-align:center;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">settings</span>
+                            Thiết lập bàn
+                        </a>
+                    </div>
+                `;
+                actionsDiv.append(editBtnHtml);
+            }
+        });
+    </script>
+}

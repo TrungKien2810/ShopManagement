@@ -1,0 +1,169 @@
+@model ShopManagement.Web.Models.ShopSettingsViewModel
+@{
+    ViewData["Title"] = "Cài đặt quán";
+    var canManage = Model.CurrentUserRole == ShopManagement.Domain.Entities.ShopRole.Owner || Model.CurrentUserRole == ShopManagement.Domain.Entities.ShopRole.Manager;
+}
+
+<!-- Page Header -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+    <div>
+        <h1 style="margin:0; font-family:var(--font-display); font-size:28px; font-weight:800; color:var(--color-primary); display:flex; align-items:center; gap:10px;">
+            <span class="material-symbols-outlined" style="font-size:30px;">store</span>
+            @Model.ShopName
+        </h1>
+        <p style="color:var(--color-warm-gray); margin:4px 0 0; font-size:14px;">
+            @Model.Address @(string.IsNullOrEmpty(Model.Phone) ? "" : "· " + Model.Phone)
+        </p>
+    </div>
+    <a asp-controller="Shop" asp-action="Index" class="btn-secondary" style="border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:6px;">
+        <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+        <span>Quay lại</span>
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Members Table -->
+    <div class="col-md-7">
+        <div class="linear-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-symbols-outlined" style="color:var(--color-primary); font-size:22px;">group</span>
+                    <h4 style="margin:0; font-family:var(--font-display); font-size:18px; font-weight:700;">Thành viên</h4>
+                </div>
+                <span class="badge badge-available" style="font-size:11px;">@Model.Members.Count thành viên</span>
+            </div>
+            
+            <div style="background:var(--color-bg-surface); border-radius:10px; border:1px solid var(--border-normal); overflow:hidden;">
+                <table class="table" style="margin:0;">
+                    <thead>
+                        <tr>
+                            <th style="padding:12px 16px; font-size:11px;">THÀNH VIÊN</th>
+                            <th style="padding:12px 16px; font-size:11px;">VAI TRÒ</th>
+                            @if (canManage)
+                            {
+                                <th style="padding:12px 16px; font-size:11px; text-align:right;">THAO TÁC</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.Members)
+                        {
+                            var initial = !string.IsNullOrEmpty(m.Username) && m.Username.Length > 0 ? m.Username[..1].ToUpper() : "U";
+                            var roleBadge = m.Role switch
+                            {
+                                ShopManagement.Domain.Entities.ShopRole.Owner => "background:rgba(244,181,65,0.12); color:var(--color-amber); border:1px solid rgba(244,181,65,0.25);",
+                                ShopManagement.Domain.Entities.ShopRole.Manager => "background:rgba(47,185,122,0.12); color:var(--color-emerald); border:1px solid rgba(47,185,122,0.25);",
+                                _ => "background:rgba(155,147,139,0.12); color:var(--color-warm-gray); border:1px solid rgba(155,147,139,0.25);"
+                            };
+                            <tr style="border-bottom:1px solid var(--border-subtle);">
+                                <td style="padding:12px 16px;">
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <div style="width:32px; height:32px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800;">@initial</div>
+                                        <span style="font-weight:600; color:var(--color-warm-white); font-size:14px;">@m.Username</span>
+                                    </div>
+                                </td>
+                                <td style="padding:12px 16px;">
+                                    @if (canManage)
+                                    {
+                                        <form asp-action="UpdateMemberRole" method="post" style="display:inline; margin:0;">
+                                            <input type="hidden" name="userId" value="@m.UserId" />
+                                            <select name="role" class="form-select" onchange="this.form.submit()" style="padding:4px 10px; font-size:12px; border-radius:6px; min-width:100px;">
+                                                @foreach (var role in Enum.GetValues<ShopManagement.Domain.Entities.ShopRole>())
+                                                {
+                                                    <option value="@role" selected="@(role == m.Role)">@role</option>
+                                                }
+                                            </select>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge" style="@roleBadge font-size:11px; padding:3px 10px; border-radius:999px;">@m.Role</span>
+                                    }
+                                </td>
+                                @if (canManage)
+                                {
+                                    <td style="padding:12px 16px; text-align:right;">
+                                        <form asp-action="RemoveMember" method="post" data-confirm="Bạn có chắc chắn muốn xóa thành viên này khỏi cửa hàng?" style="margin:0;">
+                                            <input type="hidden" name="userId" value="@m.UserId" />
+                                            <button type="submit" class="btn-secondary" style="padding:4px 10px; font-size:12px; color:#ef4444; border-color:rgba(239,68,68,0.25); border-radius:6px; min-height:32px; display:flex; align-items:center; gap:4px;">
+                                                <span class="material-symbols-outlined" style="font-size:14px;">person_remove</span>
+                                                Xóa
+                                            </button>
+                                        </form>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Invite + Quick Info -->
+    <div class="col-md-5">
+        @if (canManage)
+        {
+            <div class="linear-card" style="margin-bottom:24px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                    <span class="material-symbols-outlined" style="color:var(--color-primary); font-size:22px;">person_add</span>
+                    <h4 style="margin:0; font-family:var(--font-display); font-size:18px; font-weight:700;">Mời thành viên</h4>
+                </div>
+                <form asp-action="Invite" method="post" style="display:flex; flex-direction:column; gap:16px;">
+                    <div>
+                        <label class="form-label">Tên đăng nhập</label>
+                        <div style="position:relative;">
+                            <span class="material-symbols-outlined" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-warm-gray); font-size:18px;">account_circle</span>
+                            <input name="Username" class="form-control" required style="padding-left:40px;" placeholder="Nhập tên đăng nhập..." />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">Vai trò</label>
+                        <select name="Role" class="form-select">
+                            @foreach (var role in Enum.GetValues<ShopManagement.Domain.Entities.ShopRole>())
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" style="border-radius:8px; padding:12px; font-size:14px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="font-size:18px;">send</span>
+                        Gửi lời mời
+                    </button>
+                </form>
+            </div>
+        }
+
+        <!-- Shop Quick Info Card -->
+        <div class="linear-card">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                <span class="material-symbols-outlined" style="color:var(--color-primary); font-size:22px;">info</span>
+                <h4 style="margin:0; font-family:var(--font-display); font-size:18px; font-weight:700;">Thông tin quán</h4>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+                    <span style="font-size:13px; color:var(--color-warm-gray); font-weight:600;">Tên quán</span>
+                    <span style="font-size:14px; font-weight:700; color:var(--color-warm-white);">@Model.ShopName</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+                        <span style="font-size:13px; color:var(--color-warm-gray); font-weight:600;">Địa chỉ</span>
+                        <span style="font-size:14px; font-weight:600; color:var(--color-warm-white); text-align:right; max-width:200px;">@Model.Address</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+                        <span style="font-size:13px; color:var(--color-warm-gray); font-weight:600;">Điện thoại</span>
+                        <span style="font-size:14px; font-weight:600; color:var(--color-warm-white);">@Model.Phone</span>
+                    </div>
+                }
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+                    <span style="font-size:13px; color:var(--color-warm-gray); font-weight:600;">Vai trò của bạn</span>
+                    <span class="badge badge-available" style="font-size:11px;">@Model.CurrentUserRole</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

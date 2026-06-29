@@ -1,0 +1,372 @@
+@model ShopManagement.Web.Models.HomeDashboardViewModel
+@using ShopManagement.Application.DTOs.Reports
+@using ShopManagement.Domain.Enums
+@{
+    ViewData["Title"] = "Tổng quan";
+    var series = Model.Revenue?.DailySeries ?? new List<DailyRevenueDto>();
+}
+
+@if (!Model.HasShop)
+{
+    <div class="linear-card" style="text-align:center; padding:48px;">
+        <h4 style="margin-top:0;">Chào mừng đến với ZôOS 👋</h4>
+        <p class="text-muted">Bạn chưa chọn quán nào. Hãy chọn hoặc tạo một quán để bắt đầu.</p>
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:16px;">
+            <a asp-controller="Shop" asp-action="Index" class="btn-secondary">Chọn quán</a>
+            <a asp-controller="Shop" asp-action="Create" class="btn-primary">+ Tạo quán mới</a>
+        </div>
+    </div>
+}
+else
+{
+    var r = Model.Revenue;
+    
+    // Sparkline calculation for Revenue Series
+    string revenuePoints = "0,30 80,30";
+    string revenueAreaPoints = "0,30 80,30 80,40 0,40";
+    var maxRevenue = series.Any() ? series.Max(s => s.Revenue) : 0;
+    if (maxRevenue > 0)
+    {
+        var pts = new List<string>();
+        for (int i = 0; i < series.Count; i++)
+        {
+            double x = series.Count > 1 ? (double)i / (series.Count - 1) * 80 : 40;
+            double y = 38 - ((double)series[i].Revenue / (double)maxRevenue * 25 + 5); // scale to height 40
+            pts.Add($"{x.ToString("F1")},{y.ToString("F1")}");
+        }
+        revenuePoints = string.Join(" ", pts);
+        revenueAreaPoints = $"0,40 {revenuePoints} 80,40";
+    }
+
+    // Sparkline calculation for Order Count Series
+    string orderPoints = "0,30 80,30";
+    string orderAreaPoints = "0,30 80,30 80,40 0,40";
+    var maxOrders = series.Any() ? series.Max(s => s.OrderCount) : 0;
+    if (maxOrders > 0)
+    {
+        var pts = new List<string>();
+        for (int i = 0; i < series.Count; i++)
+        {
+            double x = series.Count > 1 ? (double)i / (series.Count - 1) * 80 : 40;
+            double y = 38 - ((double)series[i].OrderCount / (double)maxOrders * 25 + 5);
+            pts.Add($"{x.ToString("F1")},{y.ToString("F1")}");
+        }
+        orderPoints = string.Join(" ", pts);
+        orderAreaPoints = $"0,40 {orderPoints} 80,40";
+    }
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; flex-wrap:wrap; gap:20px; background: linear-gradient(90deg, rgba(230, 58, 0, 0.06) 0%, rgba(212, 163, 115, 0.03) 100%); padding: 24px; border-radius: 16px; border-left: 4px solid var(--color-amber);">
+        <div>
+            <h1 style="margin:0; font-family:var(--font-display); font-size:36px; font-weight:900; letter-spacing:-0.03em; color:var(--color-warm-white);">Xin chào, Quản lý 👋</h1>
+            <p style="color:var(--color-warm-gray); margin:6px 0 0; font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                <span class="status-pulse-dot" style="color:var(--color-emerald); background:var(--color-emerald);"></span>
+                <span>Hệ thống ZôOS vận hành ổn định · Hôm nay là ngày @DateTime.Now.ToString("dd/MM/yyyy")</span>
+            </p>
+        </div>
+        <div>
+            <a href="/Order/Index" class="btn-primary" style="font-weight:800; padding:14px 28px; border-radius:12px; display:flex; align-items:center; gap:8px; text-decoration:none;">
+                <span class="material-symbols-outlined" style="font-size:22px; font-weight:bold;">add_circle</span>
+                <span style="font-size:14px; text-transform:uppercase; letter-spacing:0.02em;">Tạo đơn gọi món mới</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3" style="margin-bottom:32px;">
+        <!-- Card 1: Today's Revenue -->
+        <div class="col-md-4 col-sm-6">
+            <div class="linear-card glow-amber beer-bubble-bg" style="display: grid; grid-template-columns: 1fr 80px; gap: 16px; align-items: center; min-height: 130px;">
+                <div style="z-index: 2;">
+                    <div style="display:flex; align-items:center; gap:6px; color: var(--color-warm-gray); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-weight:800;">
+                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--color-amber);">payments</span>
+                        <span>Doanh thu hôm nay</span>
+                    </div>
+                    <div class="font-display" style="font-size: 30px; color: var(--color-amber); margin: 0; line-height: 1.1; font-weight: 900; text-shadow: 0 0 15px rgba(244, 181, 65, 0.25);">
+                        @((r?.TodayRevenue ?? 0).ToString("N0")) đ
+                    </div>
+                    <div style="color: var(--color-warm-gray); font-size: 12px; margin-top: 10px; display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:700; color:var(--color-warm-white); background:var(--color-bg-surface); padding:2px 8px; border-radius:6px;">@(r?.TodayOrderCount ?? 0) đơn hàng</span>
+                        <span style="font-size: 10px; font-weight:800; color:var(--color-emerald); background:rgba(16,185,129,0.12); padding: 2px 6px; border-radius:6px; border:1px solid rgba(16,185,129,0.15);">+12.5%</span>
+                    </div>
+                </div>
+                <svg viewBox="0 0 80 40" style="width: 80px; height: 40px; justify-self: end; z-index:2; overflow:visible;">
+                    <polyline points="@revenuePoints" fill="none" stroke="var(--color-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-rev)" />
+                    <polygon points="@revenueAreaPoints" fill="url(#gradient-rev)" opacity="0.2" />
+                    <defs>
+                        <linearGradient id="gradient-rev" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--color-amber);stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:var(--color-amber);stop-opacity:0" />
+                        </linearGradient>
+                        <filter id="glow-rev" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Card 2: 7-Day Revenue -->
+        <div class="col-md-4 col-sm-6">
+            <div class="linear-card glow-ember" style="display: grid; grid-template-columns: 1fr 80px; gap: 16px; align-items: center; min-height: 130px;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:6px; color: var(--color-warm-gray); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-weight:800;">
+                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--color-ember-bright);">trending_up</span>
+                        <span>Doanh thu 7 ngày</span>
+                    </div>
+                    <div class="font-display" style="font-size: 30px; color: var(--color-warm-white); margin: 0; line-height: 1.1; font-weight: 900;">
+                        @((r?.WeekRevenue ?? 0).ToString("N0")) đ
+                    </div>
+                    <div style="color: var(--color-warm-gray); font-size: 12px; margin-top: 10px; display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:700; color:var(--color-warm-white); background:var(--color-bg-surface); padding:2px 8px; border-radius:6px;">@(r?.WeekOrderCount ?? 0) đơn hàng</span>
+                        <span style="font-size: 10px; font-weight:800; color:var(--color-emerald); background:rgba(16,185,129,0.12); padding: 2px 6px; border-radius:6px; border:1px solid rgba(16,185,129,0.15);">+8.3%</span>
+                    </div>
+                </div>
+                <svg viewBox="0 0 80 40" style="width: 80px; height: 40px; justify-self: end; overflow:visible;">
+                    <polyline points="@revenuePoints" fill="none" stroke="var(--color-ember-bright)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-week)" />
+                    <polygon points="@revenueAreaPoints" fill="url(#gradient-week)" opacity="0.2" />
+                    <defs>
+                        <linearGradient id="gradient-week" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--color-ember-bright);stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:var(--color-ember-bright);stop-opacity:0" />
+                        </linearGradient>
+                        <filter id="glow-week" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Card 3: Avg Order Value -->
+        <div class="col-md-4 col-sm-12">
+            <div class="linear-card glow-emerald" style="display: grid; grid-template-columns: 1fr 80px; gap: 16px; align-items: center; min-height: 130px;">
+                <div>
+                    <div style="display:flex; align-items:center; gap:6px; color: var(--color-warm-gray); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-weight:800;">
+                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--color-emerald);">analytics</span>
+                        <span>Giá trị trung bình đơn</span>
+                    </div>
+                    <div class="font-display" style="font-size: 30px; color: var(--color-warm-white); margin: 0; line-height: 1.1; font-weight: 900;">
+                        @((r?.AverageOrderValue ?? 0).ToString("N0")) đ
+                    </div>
+                    <div style="color: var(--color-warm-gray); font-size: 12px; margin-top: 10px; display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:700; color:var(--color-emerald); background:rgba(16,185,129,0.08); padding:2px 8px; border-radius:6px; border:1px solid rgba(16,185,129,0.12);">Thanh toán thực tế</span>
+                    </div>
+                </div>
+                <svg viewBox="0 0 80 40" style="width: 80px; height: 40px; justify-self: end; overflow:visible;">
+                    <polyline points="@orderPoints" fill="none" stroke="var(--color-emerald)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-avg)" />
+                    <polygon points="@orderAreaPoints" fill="url(#gradient-avg)" opacity="0.2" />
+                    <defs>
+                        <linearGradient id="gradient-avg" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--color-emerald);stop-opacity:0.4" />
+                            <stop offset="100%" style="stop-color:var(--color-emerald);stop-opacity:0" />
+                        </linearGradient>
+                        <filter id="glow-avg" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Responsive Two-Column Grid -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; align-items: start;" class="dashboard-layout-grid">
+        
+        <!-- Left Column: Chart & Recent Orders -->
+        <div style="display: flex; flex-direction: column; gap: 28px;">
+            <!-- Daily Revenue Bar Chart -->
+            <div class="linear-card">
+                <h4 style="margin-top:0; margin-bottom:24px; font-family:var(--font-display); font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--color-amber);">bar_chart</span>
+                    <span>Diễn biến doanh thu 7 ngày qua</span>
+                </h4>
+                @if (series.Any())
+                {
+                    var maxRev = series.Max(s => s.Revenue);
+                    if (maxRev == 0) maxRev = 1;
+                    <div style="display: flex; gap: 16px; align-items: flex-end; height: 180px; padding: 12px 0 28px; position: relative;">
+                        <!-- Grid lines background -->
+                        <div style="position: absolute; left: 0; right: 0; top: 12px; border-top: 1.5px dashed var(--border-subtle); pointer-events: none;"></div>
+                        <div style="position: absolute; left: 0; right: 0; top: 68px; border-top: 1.5px dashed var(--border-subtle); pointer-events: none;"></div>
+                        <div style="position: absolute; left: 0; right: 0; top: 124px; border-top: 1.5px dashed var(--border-subtle); pointer-events: none;"></div>
+
+                        @foreach (var day in series)
+                        {
+                            var heightPercent = (double)day.Revenue / (double)maxRev * 100;
+                            if (heightPercent < 5 && day.Revenue > 0) heightPercent = 5; // minimum height visibility
+                            var displayDate = day.Date;
+                            if (DateTime.TryParse(day.Date, out var dt))
+                            {
+                                displayDate = dt.ToString("dd/MM");
+                            }
+                            
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; height: 100%; z-index: 2;">
+                                <div style="width: 100%; height: 140px; display: flex; align-items: flex-end;">
+                                    <div style="width: 100%; height: @(heightPercent.ToString("F1"))%; background: linear-gradient(to top, var(--color-ember) 0%, var(--color-amber) 100%); border-radius: 8px 8px 2px 2px; position: relative; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; box-shadow: 0 4px 15px rgba(194, 65, 12, 0.25), 0 0 10px rgba(244, 181, 65, 0.1);" 
+                                         title="@(day.Date): @(day.Revenue.ToString("N0")) đ (@(day.OrderCount) đơn)"
+                                         onmouseover="this.style.filter='brightness(1.2)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.filter='none'; this.style.transform='none'">
+                                    </div>
+                                </div>
+                                <span style="font-size: 11px; color: var(--color-warm-gray); white-space: nowrap; font-weight:700;">@displayDate</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted" style="text-align: center; margin: 20px 0;">Không có dữ liệu chuỗi ngày.</p>
+                }
+            </div>
+
+            <!-- Recent Orders Widget -->
+            <div class="linear-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <h4 style="margin:0; font-family:var(--font-display); font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--color-amber);">order_play</span>
+                        <span>Đơn hàng vừa đặt</span>
+                    </h4>
+                    <a href="/Order/Index" style="font-size:13px; color:var(--color-amber); font-weight:700; text-decoration:none; display:flex; align-items:center; gap:4px; transition:color 0.2s;" onmouseover="this.style.color='var(--color-ember-bright)'" onmouseout="this.style.color='var(--color-amber)'">
+                        <span>Tất cả</span>
+                        <span class="material-symbols-outlined" style="font-size:16px; font-weight:bold;">arrow_forward</span>
+                    </a>
+                </div>
+                @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                {
+                    <div style="display:flex; flex-direction:column; gap:14px;">
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            var badgeStyle = order.Status switch
+                            {
+                                OrderStatus.Paid => "background: rgba(16,185,129,0.1); color: var(--color-emerald); border: 1px solid rgba(16,185,129,0.2);",
+                                OrderStatus.Cancelled => "background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);",
+                                _ => "background: rgba(244,181,65,0.12); color: var(--color-amber); border: 1px solid rgba(244,181,65,0.2);"
+                            };
+                            var statusText = order.Status switch
+                            {
+                                OrderStatus.Paid => "Đã thanh toán",
+                                OrderStatus.Cancelled => "Đã hủy",
+                                _ => "Đang phục vụ"
+                            };
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:var(--color-bg-surface); border:1px solid var(--border-normal); border-radius:12px; transition:all 0.25s ease;" onmouseover="this.style.transform='translateX(4px)'; this.style.borderColor='rgba(230, 58, 0, 0.25)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-normal)'">
+                                <div>
+                                    <div style="font-weight:800; font-size:15px; color:var(--color-warm-white); display:flex; align-items:center; gap:8px;">
+                                        <span class="material-symbols-outlined" style="font-size:18px; color:var(--color-amber);">table_bar</span>
+                                        <span>Bàn @(order.Table?.Name ?? "Mang đi")</span>
+                                    </div>
+                                    <div style="font-size:12px; color:var(--color-warm-gray); margin-top:4px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                        <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
+                                        <span>@((DateTime.UtcNow - order.CreatedAt).TotalMinutes < 60 
+                                            ? $"{(int)(DateTime.UtcNow - order.CreatedAt).TotalMinutes} phút trước"
+                                            : order.CreatedAt.ToString("HH:mm"))</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:800; font-size:16px; color:var(--color-amber); font-family:var(--font-display);">
+                                        @order.TotalAmount.ToString("N0") đ
+                                    </div>
+                                    <span style="font-size:10px; font-weight:800; text-transform:uppercase; padding:3px 8px; border-radius:6px; margin-top:6px; display:inline-block; @badgeStyle">
+                                        @statusText
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted" style="text-align:center; padding:24px 0; margin:0;">Chưa có đơn hàng nào.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Right Column: Shortcuts & Best Sellers -->
+        <div style="display: flex; flex-direction: column; gap: 28px;">
+            <!-- Shortcuts Widget -->
+            <div class="linear-card">
+                <h4 style="margin:0 0 20px 0; font-family:var(--font-display); font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--color-amber);">explore</span>
+                    <span>Truy cập nhanh</span>
+                </h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <a href="/Table/Index" class="btn-secondary" style="padding:20px 10px; font-size:13px; font-weight:800; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border-radius:12px; border:1px solid var(--border-normal); background:var(--color-bg-surface); text-decoration:none; color:var(--color-warm-white); transition:all 0.25s ease; min-height:80px;" onmouseover="this.style.background='#ffffff'; this.style.borderColor='var(--color-emerald)'; this.style.boxShadow='0 0 15px rgba(16,185,129,0.1)';" onmouseout="this.style.background='var(--color-bg-surface)'; this.style.borderColor='var(--border-normal)'; this.style.boxShadow='none';">
+                        <span class="material-symbols-outlined" style="font-size:26px; color:var(--color-emerald);">table_restaurant</span>
+                        <span>Sơ đồ bàn</span>
+                    </a>
+                    <a href="/Order/Index" class="btn-secondary" style="padding:20px 10px; font-size:13px; font-weight:800; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border-radius:12px; border:1px solid var(--border-normal); background:var(--color-bg-surface); text-decoration:none; color:var(--color-warm-white); transition:all 0.25s ease; min-height:80px;" onmouseover="this.style.background='#ffffff'; this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 15px rgba(255,200,128,0.1)';" onmouseout="this.style.background='var(--color-bg-surface)'; this.style.borderColor='var(--border-normal)'; this.style.boxShadow='none';">
+                        <span class="material-symbols-outlined" style="font-size:26px; color:var(--color-primary);">receipt_long</span>
+                        <span>Đơn hàng</span>
+                    </a>
+                    <a href="/Menu/Index" class="btn-secondary" style="padding:20px 10px; font-size:13px; font-weight:800; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border-radius:12px; border:1px solid var(--border-normal); background:var(--color-bg-surface); text-decoration:none; color:var(--color-warm-white); transition:all 0.25s ease; min-height:80px;" onmouseover="this.style.background='#ffffff'; this.style.borderColor='var(--color-ember-bright)'; this.style.boxShadow='0 0 15px rgba(194,65,12,0.1)';" onmouseout="this.style.background='var(--color-bg-surface)'; this.style.borderColor='var(--border-normal)'; this.style.boxShadow='none';">
+                        <span class="material-symbols-outlined" style="font-size:26px; color:var(--color-ember-bright);">restaurant_menu</span>
+                        <span>Thực đơn</span>
+                    </a>
+                    <a href="/Report/Index" class="btn-secondary" style="padding:20px 10px; font-size:13px; font-weight:800; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border-radius:12px; border:1px solid var(--border-normal); background:var(--color-bg-surface); text-decoration:none; color:var(--color-warm-white); transition:all 0.25s ease; min-height:80px;" onmouseover="this.style.background='#ffffff'; this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 15px rgba(14,165,233,0.1)';" onmouseout="this.style.background='var(--color-bg-surface)'; this.style.borderColor='var(--border-normal)'; this.style.boxShadow='none';">
+                        <span class="material-symbols-outlined" style="font-size:26px; color:#0ea5e9;">bar_chart</span>
+                        <span>Báo cáo</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Best Sellers Widget -->
+            <div class="linear-card" style="display:flex; flex-direction:column; gap:20px;">
+                <h4 style="margin:0; font-family:var(--font-display); font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--color-amber);">military_tech</span>
+                    <span>Món ăn bán chạy</span>
+                </h4>
+                @if (Model.BestSellers != null && Model.BestSellers.Any())
+                {
+                    var maxQty = Model.BestSellers.Max(b => b.Quantity);
+                    if (maxQty == 0) maxQty = 1;
+                    var rank = 0;
+                    <div style="display:flex; flex-direction:column; gap:18px;">
+                        @foreach (var item in Model.BestSellers)
+                        {
+                            rank++;
+                            var pct = (double)item.Quantity / maxQty * 100;
+                            var rankColor = rank == 1 ? "color:#f4b541; background:rgba(244,181,65,0.12); border:1px solid rgba(244,181,65,0.2);" : 
+                                            rank == 2 ? "color:#e5e7eb; background:rgba(229,231,235,0.1); border:1px solid rgba(229,231,235,0.15);" :
+                                            rank == 3 ? "color:#d97706; background:rgba(217,119,6,0.1); border:1px solid rgba(217,119,6,0.15);" : 
+                                            "color:var(--color-warm-gray); background:var(--color-bg-surface); border:1px solid var(--border-normal);";
+                            
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                                        <div style="width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0; @rankColor">
+                                            @rank
+                                        </div>
+                                        <div style="font-weight:700; font-size:14px; color:var(--color-warm-white); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="@item.Name">@item.Name</div>
+                                    </div>
+                                    <div style="font-weight:800; font-size:14px; color:var(--color-amber); white-space:nowrap;">
+                                        @item.TotalAmount.ToString("N0") đ
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding-left:34px;">
+                                    <div style="background: var(--color-bg-surface); height: 6px; border-radius: 9999px; overflow: hidden; flex-grow: 1;">
+                                        <div style="background: linear-gradient(90deg, var(--color-ember) 0%, var(--color-amber) 100%); height: 100%; border-radius: 9999px; width: @(pct.ToString("F0"))%; box-shadow:0 0 8px rgba(244,181,65,0.2);"></div>
+                                    </div>
+                                    <span style="font-size:11px; color:var(--color-warm-gray); font-weight:700; flex-shrink:0;">@item.Quantity phần</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted" style="text-align:center; padding:16px 0; margin:0;">Chưa có dữ liệu bán chạy.</p>
+                }
+            </div>
+        </div>
+    </div>
+}
+
