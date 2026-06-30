@@ -1,0 +1,39 @@
+@model ShopManagement.Web.Models.CreateBranchViewModel
+@{
+    ViewData["Title"] = "Thêm chi nhánh";
+}
+
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Thêm chi nhánh</h1>
+        <p class="page-subtitle">Tạo chi nhánh mới cho quán</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary">← Quay lại</a>
+</div>
+
+<div class="linear-card" style="max-width:520px;">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 12px;"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autofocus />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label"></label>
+            <input asp-for="Address" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Phone" class="form-label"></label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn-primary">Tạo chi nhánh</button>
+        <a asp-action="Index" class="btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

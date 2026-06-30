@@ -1,0 +1,53 @@
+@model ShopManagement.Web.Models.TableFormViewModel
+@{
+    ViewData["Title"] = "Sửa bàn";
+}
+
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Sửa bàn</h1>
+        <p class="page-subtitle">Cập nhật thông tin bàn</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary">← Quay lại</a>
+</div>
+
+<div class="linear-card" style="max-width:480px;">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 12px;"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autofocus />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Capacity" class="form-label"></label>
+            <input asp-for="Capacity" type="number" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Location" class="form-label"></label>
+            <input asp-for="Location" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="AreaId" class="form-label"></label>
+            <select asp-for="AreaId" class="form-select">
+                <option value="">-- Không chọn --</option>
+                @foreach (var area in Model.AreaOptions)
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary">Lưu</button>
+        <a asp-action="Index" class="btn-secondary">Hủy</a>
+    </form>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline; margin-top:8px;" data-confirm="Bạn có chắc chắn muốn xóa bàn này? Hành động này không thể hoàn tác.">
+        <button type="submit" class="btn-danger" style="border-radius:12px; padding:10px 20px; font-weight:700; border:none;">Xóa bàn</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

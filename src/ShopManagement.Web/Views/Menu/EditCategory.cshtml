@@ -1,0 +1,34 @@
+@model ShopManagement.Web.Models.CategoryFormViewModel
+@{
+    ViewData["Title"] = "Sửa danh mục";
+}
+
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Sửa danh mục</h1>
+        <p class="page-subtitle">Cập nhật thông tin danh mục</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary">← Quay lại</a>
+</div>
+
+<div class="linear-card" style="max-width:480px;">
+    <form asp-action="EditCategory" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 12px;"></div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autofocus />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Lưu</button>
+        <a asp-action="Index" class="btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

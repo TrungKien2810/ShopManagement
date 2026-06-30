@@ -1,0 +1,58 @@
+@model ShopManagement.Web.Models.ProductFormViewModel
+@{
+    ViewData["Title"] = "Thêm món ăn";
+}
+
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Thêm món ăn</h1>
+        <p class="page-subtitle">Thêm món mới vào thực đơn</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary">← Quay lại</a>
+</div>
+
+<div class="linear-card" style="max-width:520px;">
+    <form asp-action="CreateProduct" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 12px;"></div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autofocus />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Price" class="form-label"></label>
+            <input asp-for="Price" type="number" step="1000" class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="CategoryId" class="form-label"></label>
+            <select asp-for="CategoryId" class="form-select">
+                <option value="">-- Chọn danh mục --</option>
+                @foreach (var c in Model.CategoryOptions)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ImageFile" class="form-label"></label>
+            <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+        </div>
+        <div class="mb-3" style="display:flex; align-items:center; gap:8px;">
+            <input asp-for="IsAvailable" type="checkbox" style="width:auto;" />
+            <label asp-for="IsAvailable" class="form-label" style="margin:0;"></label>
+        </div>
+
+        <button type="submit" class="btn-primary">Tạo món</button>
+        <a asp-action="Index" class="btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -27,3 +27,6 @@ diagnostic_log.txt
 design-skills/
 design-system/
 clone_design_skills.ps1
+
+# AI Coding Governance Layer runtime data
+.govern/

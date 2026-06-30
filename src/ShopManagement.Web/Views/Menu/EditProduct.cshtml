@@ -1,0 +1,62 @@
+@model ShopManagement.Web.Models.ProductFormViewModel
+@{
+    ViewData["Title"] = "Sửa món ăn";
+}
+
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Sửa món ăn</h1>
+        <p class="page-subtitle">Cập nhật thông tin món ăn</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary">← Quay lại</a>
+</div>
+
+<div class="linear-card" style="max-width:520px;">
+    @if (!string.IsNullOrEmpty(Model.ExistingImageUrl))
+    {
+        <img src="@Model.ExistingImageUrl" style="width:120px; height:90px; object-fit:cover; border-radius:10px; margin-bottom:16px;" />
+    }
+    <form asp-action="EditProduct" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ExistingImageUrl" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 12px;"></div>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autofocus />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Price" class="form-label"></label>
+            <input asp-for="Price" type="number" step="1000" class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="CategoryId" class="form-label"></label>
+            <select asp-for="CategoryId" class="form-select">
+                @foreach (var c in Model.CategoryOptions)
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ImageFile" class="form-label">Đổi ảnh món</label>
+            <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+        </div>
+        <div class="mb-3" style="display:flex; align-items:center; gap:8px;">
+            <input asp-for="IsAvailable" type="checkbox" style="width:auto;" />
+            <label asp-for="IsAvailable" class="form-label" style="margin:0;"></label>
+        </div>
+
+        <button type="submit" class="btn-primary">Lưu</button>
+        <a asp-action="Index" class="btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

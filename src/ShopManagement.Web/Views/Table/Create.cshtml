@@ -1,0 +1,49 @@
+@model ShopManagement.Web.Models.TableFormViewModel
+@{
+    ViewData["Title"] = "Thêm bàn";
+}
+
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Thêm bàn</h1>
+        <p class="page-subtitle">Tạo bàn mới và chọn khu vực</p>
+    </div>
+    <a asp-action="Index" class="btn-secondary">← Quay lại</a>
+</div>
+
+<div class="linear-card" style="max-width:480px;">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: 12px;"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autofocus />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Capacity" class="form-label"></label>
+            <input asp-for="Capacity" type="number" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Location" class="form-label"></label>
+            <input asp-for="Location" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="AreaId" class="form-label"></label>
+            <select asp-for="AreaId" class="form-select">
+                <option value="">-- Không chọn --</option>
+                @foreach (var area in Model.AreaOptions)
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary">Tạo bàn</button>
+        <a asp-action="Index" class="btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

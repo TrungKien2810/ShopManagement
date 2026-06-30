@@ -84,7 +84,7 @@
 
         @foreach (var day in Model.DailySeries)
         {
-            var heightPct = maxRevenue > 0 ? (double)(day.Revenue / maxRevenue) * 100 : 0;
+            var heightPct = maxRevenue > 0 ? (double)day.Revenue / (double)maxRevenue * 100 : 0;
             <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; position: relative; z-index: 10;">
                 <span style="font-size: 11px; color: var(--color-primary); margin-bottom: 8px; font-weight: 700; font-family: var(--font-display); opacity: @(day.Revenue > 0 ? "1" : "0");">
                     @(day.Revenue > 0 ? day.Revenue.ToString("N0") : "")
@@ -93,7 +93,7 @@
                      onmouseover="this.style.filter='brightness(1.15)'; this.style.boxShadow='0 4px 20px rgba(255, 200, 128, 0.35)';"
                      onmouseout="this.style.filter='none'; this.style.boxShadow='0 4px 15px rgba(255, 200, 128, 0.1)';">
                 </div>
-                <span style="font-size: 12px; margin-top: 12px; color: var(--color-warm-gray); font-weight: 600;">@DateTime.Parse(day.Date).ToString("dd/MM")</span>
+                <span style="font-size: 12px; margin-top: 12px; color: var(--color-warm-gray); font-weight: 600;">@(DateTime.TryParse(day.Date, out var d) ? d.ToString("dd/MM") : day.Date)</span>
             </div>
         }
     </div>

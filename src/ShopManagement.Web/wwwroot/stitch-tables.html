@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ember Bistro | Quản Lý Bàn</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #121414;
+            color: #e2e2e2;
+            overflow: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .table-glow-available { filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.2)); }
+        .table-glow-occupied { filter: drop-shadow(0 0 8px rgba(248, 113, 113, 0.2)); }
+        .table-glow-reserved { filter: drop-shadow(0 0 8px rgba(255, 200, 128, 0.2)); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1c1c; }
+        ::-webkit-scrollbar-thumb { background: #524534; border-radius: 10px; }
+        
+        .floor-grid {
+            background-image: radial-gradient(#2a1e17 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .transition-table {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ffb4ab",
+                      "surface-container-lowest": "#0c0f0f",
+                      "tertiary-fixed": "#ece0dc",
+                      "surface-tint": "#ffb955",
+                      "on-tertiary": "#362f2d",
+                      "on-primary-fixed": "#291800",
+                      "on-secondary-fixed-variant": "#53443b",
+                      "surface-dim": "#121414",
+                      "primary-fixed-dim": "#ffb955",
+                      "inverse-on-surface": "#2f3131",
+                      "surface-container-high": "#282a2b",
+                      "outline": "#9f8e7a",
+                      "background": "#121414",
+                      "surface-bright": "#37393a",
+                      "on-secondary-container": "#c6b1a6",
+                      "tertiary-fixed-dim": "#cfc4c0",
+                      "on-primary-container": "#644000",
+                      "surface-variant": "#333535",
+                      "tertiary-container": "#bfb4b0",
+                      "on-error": "#690005",
+                      "secondary-container": "#53443b",
+                      "primary-container": "#f5a623",
+                      "surface-container-low": "#1a1c1c",
+                      "surface-container-highest": "#333535",
+                      "on-tertiary-fixed": "#201a18",
+                      "on-primary-fixed-variant": "#633f00",
+                      "on-background": "#e2e2e2",
+                      "primary-fixed": "#ffddb4",
+                      "on-primary": "#452b00",
+                      "on-secondary": "#3b2e26",
+                      "on-surface-variant": "#d7c3ae",
+                      "on-tertiary-container": "#4d4643",
+                      "secondary-fixed": "#f5ded3",
+                      "secondary": "#d8c2b7",
+                      "error-container": "#93000a",
+                      "surface": "#121414",
+                      "on-secondary-fixed": "#251912",
+                      "tertiary": "#dbcfcc",
+                      "outline-variant": "#524534",
+                      "on-error-container": "#ffdad6",
+                      "inverse-primary": "#835500",
+                      "primary": "#ffc880",
+                      "on-surface": "#e2e2e2",
+                      "secondary-fixed-dim": "#d8c2b7",
+                      "inverse-surface": "#e2e2e2",
+                      "on-tertiary-fixed-variant": "#4d4542",
+                      "surface-container": "#1e2020"
+              },
+              "spacing": {
+                      "stack-gap": "12px",
+                      "unit": "8px",
+                      "sidebar-width": "260px",
+                      "gutter": "16px",
+                      "container-padding": "24px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Manrope"],
+                      "title-md": ["Manrope"],
+                      "headline-lg": ["Manrope"],
+                      "display-lg": ["Manrope"],
+                      "body-md": ["Manrope"]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- SideNavBar (Authority: JSON) -->
+<aside class="hidden md:flex flex-col h-full py-container-padding bg-surface-container-lowest border-r border-outline-variant w-sidebar-width fixed left-0 top-0 z-50">
+<div class="px-gutter mb-10">
+<h1 class="font-headline-lg text-headline-lg text-primary">Ember Bistro</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Premium Management</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-sm text-label-sm bg-secondary-container text-primary border-l-4 border-primary transition-all" href="#">
+<span class="material-symbols-outlined">table_restaurant</span>
+                Tables
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+                Menu
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">history</span>
+                Orders
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+                Staff
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                Analytics
+            </a>
+</nav>
+<div class="px-4 mt-auto space-y-2">
+<button class="w-full py-3 rounded-lg bg-primary text-on-primary font-title-md text-sm mb-6 active:scale-95 transition-transform">
+                Switch to POS
+            </button>
+<a class="flex items-center gap-3 px-4 py-2 font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col md:ml-sidebar-width bg-background transition-all duration-300">
+<!-- TopNavBar (Authority: JSON) -->
+<header class="flex justify-between items-center w-full px-gutter py-4 bg-surface-container-low border-b border-outline-variant z-40 sticky top-0">
+<div class="flex items-center gap-6">
+<div class="md:hidden">
+<span class="material-symbols-outlined text-primary">menu</span>
+</div>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-lowest border-outline-variant rounded-full pl-10 pr-4 py-1.5 text-sm focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Tìm kiếm bàn..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden lg:flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-title-md text-sm active:opacity-80 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+                    New Order
+                </button>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a premium restaurant manager wearing a sleek dark uniform, soft warm amber interior lighting of a high-end bistro in the background, sharp focus, cinematic photography, luxury hospitality aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_UzrTHxcVsLB3_U9fmoR2VDua1C8ukJT6DXdtO9Hya4p6QBhm8MkFjRPEfWFets4ROuECFJBgZzCleyRSfzh5JetsaYwSltas1mM2FT8MIvuby1HN76rnwKn3DGcPl-UGghuBqD_nGEMMKo9WH1x-GtmIWzzxC2EUtLQKBE3yMSXH7eixh0x1TJf5LNdT07ceHRH5fKNIZYfhlr4lsKDUmOzGS4I2QHI3yg8ygOnwdKRF3kTGfCK-4enFPZ-mmQ9qthVmPUSUO2VO"/>
+</div>
+</div>
+</header>
+<!-- Floor Plan Layout -->
+<section class="flex-1 relative overflow-hidden flex flex-col lg:flex-row">
+<!-- Canvas Area -->
+<div class="flex-1 relative p-container-padding floor-grid overflow-auto custom-scrollbar">
+<!-- Floor Plan Legend -->
+<div class="absolute top-6 left-6 flex flex-wrap gap-4 bg-surface-container-high/80 backdrop-blur-md p-3 rounded-xl border border-outline-variant/30 z-10 shadow-xl">
+<div class="flex items-center gap-2 text-xs font-semibold">
+<span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+<span>Trống</span>
+</div>
+<div class="flex items-center gap-2 text-xs font-semibold">
+<span class="w-3 h-3 rounded-full bg-red-500"></span>
+<span>Đang dùng</span>
+</div>
+<div class="flex items-center gap-2 text-xs font-semibold">
+<span class="w-3 h-3 rounded-full bg-amber-500"></span>
+<span>Đã đặt</span>
+</div>
+<div class="flex items-center gap-2 text-xs font-semibold">
+<span class="w-3 h-3 rounded-full bg-stone-500"></span>
+<span>Chưa dọn</span>
+</div>
+</div>
+<!-- Table Elements (Simulated Positions) -->
+<div class="relative w-[1000px] h-[700px] mx-auto mt-12">
+<!-- Table 01: Occupied, Round -->
+<div class="absolute top-[10%] left-[10%] group cursor-pointer transition-table" onclick="selectTable('T-01', 'Đang dùng', '04', '18:30', '2,450,000đ', 'red')">
+<div class="w-24 h-24 rounded-full bg-surface-container-high border-2 border-red-500 flex flex-col items-center justify-center table-glow-occupied group-hover:scale-110">
+<span class="text-xs font-bold text-on-surface-variant">T-01</span>
+<span class="material-symbols-outlined text-red-500">group</span>
+<span class="text-[10px] font-bold text-red-400">4 Khách</span>
+</div>
+</div>
+<!-- Table 02: Available, Square -->
+<div class="absolute top-[10%] left-[35%] group cursor-pointer transition-table" onclick="selectTable('T-02', 'Trống', '00', '--:--', '0đ', 'emerald')">
+<div class="w-20 h-20 rounded-lg bg-surface-container-high border-2 border-emerald-500/50 flex flex-col items-center justify-center table-glow-available group-hover:scale-110">
+<span class="text-xs font-bold text-on-surface-variant">T-02</span>
+<span class="material-symbols-outlined text-emerald-500/50">check_circle</span>
+</div>
+</div>
+<!-- Table 03: Reserved, Square -->
+<div class="absolute top-[10%] left-[60%] group cursor-pointer transition-table" onclick="selectTable('T-03', 'Đã đặt', '02', '19:45', '--', 'amber')">
+<div class="w-20 h-20 rounded-lg bg-surface-container-high border-2 border-amber-500 flex flex-col items-center justify-center table-glow-reserved group-hover:scale-110">
+<span class="text-xs font-bold text-on-surface-variant">T-03</span>
+<span class="material-symbols-outlined text-amber-500">event</span>
+<span class="text-[10px] font-bold text-amber-400">19:45</span>
+</div>
+</div>
+<!-- Bar Counter Section -->
+<div class="absolute bottom-[5%] left-[5%] w-[400px] h-[60px] bg-surface-container-highest border border-outline-variant rounded-lg flex items-center justify-around px-4">
+<span class="text-xs font-bold text-on-surface-variant opacity-50 uppercase tracking-widest">Khu Vực Quầy Bar</span>
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-red-500 border-2 border-surface-container"></div>
+<div class="w-8 h-8 rounded-full bg-red-500 border-2 border-surface-container"></div>
+<div class="w-8 h-8 rounded-full bg-emerald-500 border-2 border-surface-container"></div>
+<div class="w-8 h-8 rounded-full bg-emerald-500 border-2 border-surface-container"></div>
+</div>
+</div>
+<!-- Table 04: Dirty, Round -->
+<div class="absolute bottom-[20%] left-[50%] group cursor-pointer transition-table" onclick="selectTable('T-04', 'Chưa dọn', '00', '--:--', '--', 'stone')">
+<div class="w-32 h-32 rounded-full bg-surface-container-high border-2 border-stone-500 flex flex-col items-center justify-center opacity-70 group-hover:scale-110">
+<span class="text-xs font-bold text-on-surface-variant">T-04</span>
+<span class="material-symbols-outlined text-stone-400">cleaning_services</span>
+<span class="text-[10px] font-bold text-stone-400">Cần dọn dẹp</span>
+</div>
+</div>
+<!-- Table 05: Occupied Large, Rectangular -->
+<div class="absolute top-[40%] right-[10%] group cursor-pointer transition-table" onclick="selectTable('T-05', 'Đang dùng', '08', '17:45', '5,120,000đ', 'red')">
+<div class="w-48 h-24 rounded-xl bg-surface-container-high border-2 border-red-500 flex flex-col items-center justify-center table-glow-occupied group-hover:scale-110">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-on-surface-variant">Bàn VIP 05</span>
+<span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] rounded uppercase font-bold">Priority</span>
+</div>
+<span class="text-xs font-bold text-red-400 mt-1">8 Khách • Từ 17:45</span>
+</div>
+</div>
+<!-- Wall Decoration/Architectural items -->
+<div class="absolute top-0 right-0 w-32 h-full border-l border-outline-variant/20 flex items-center justify-center">
+<p class="rotate-90 text-[10px] tracking-[0.5em] text-on-surface-variant opacity-20 uppercase font-black">Lối Vào Chính</p>
+</div>
+</div>
+</div>
+<!-- Detail Sidebar (Toggled State) -->
+<aside class="w-full lg:w-96 bg-surface-container-low border-l border-outline-variant p-gutter flex flex-col transform translate-x-full transition-transform duration-500 shadow-2xl" id="detailSidebar">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary" id="side-table-id">Bàn T-01</h2>
+<div class="inline-flex items-center px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-wider" id="side-table-status-pill">
+                            Đang dùng
+                        </div>
+</div>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors" onclick="closeSidebar()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="space-y-6 flex-1 overflow-auto">
+<!-- Metrics Grid -->
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/30">
+<span class="block text-[10px] text-on-surface-variant uppercase font-bold mb-1">Số Khách</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">groups</span>
+<span class="font-title-md text-lg" id="side-guest-count">04</span>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/30">
+<span class="block text-[10px] text-on-surface-variant uppercase font-bold mb-1">Giờ Vào</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">schedule</span>
+<span class="font-title-md text-lg" id="side-seated-time">18:30</span>
+</div>
+</div>
+</div>
+<!-- Order Preview -->
+<div class="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/30">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-title-md text-sm">Đơn hàng hiện tại</h3>
+<span class="text-xs text-primary cursor-pointer hover:underline">Chi tiết</span>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Bò Wagyu A5 x 2</span>
+<span class="font-bold">1,800k</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Rượu vang đỏ Vintage</span>
+<span class="font-bold">650k</span>
+</div>
+<div class="h-px bg-outline-variant/30 my-2"></div>
+<div class="flex justify-between">
+<span class="text-xs font-bold uppercase text-on-surface-variant">Tổng cộng</span>
+<span class="font-title-md text-primary" id="side-total-bill">2,450,000đ</span>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="grid grid-cols-2 gap-3">
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container-high border border-outline-variant/50 hover:bg-surface-container-highest transition-colors active:scale-95">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-xs font-bold">Thanh Toán</span>
+</button>
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container-high border border-outline-variant/50 hover:bg-surface-container-highest transition-colors active:scale-95">
+<span class="material-symbols-outlined">shuffle</span>
+<span class="text-xs font-bold">Đổi Bàn</span>
+</button>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant mt-auto">
+<button class="w-full py-4 rounded-xl bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">
+                        Cập nhật trạng thái
+                    </button>
+</div>
+</aside>
+</section>
+<!-- Footer (Authority: JSON) -->
+<footer class="bg-surface-dim border-t border-outline-variant w-full py-8 mt-auto z-40">
+<div class="flex flex-col md:flex-row justify-between items-center px-gutter max-w-7xl mx-auto gap-4">
+<div class="flex items-center gap-4">
+<span class="font-title-md text-title-md text-primary">Ember Bistro</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-60">
+                        © 2024 Ember Bistro Luxury Hospitality. All rights reserved.
+                    </p>
+</div>
+<div class="flex gap-6">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact Support</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-secondary transition-colors" href="#">Careers</a>
+</div>
+</div>
+</footer>
+</main>
+<!-- Floating Action Button for Mobile -->
+<button class="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center z-50">
+<span class="material-symbols-outlined">add</span>
+</button>
+<script>
+        function selectTable(id, status, guests, time, bill, color) {
+            const sidebar = document.getElementById('detailSidebar');
+            const tableId = document.getElementById('side-table-id');
+            const tableStatus = document.getElementById('side-table-status-pill');
+            const guestCount = document.getElementById('side-guest-count');
+            const seatedTime = document.getElementById('side-seated-time');
+            const totalBill = document.getElementById('side-total-bill');
+
+            tableId.innerText = "Bàn " + id;
+            tableStatus.innerText = status;
+            guestCount.innerText = guests;
+            seatedTime.innerText = time;
+            totalBill.innerText = bill;
+
+            // Update status color
+            tableStatus.className = "inline-flex items-center px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-wider";
+            if(color === 'red') tableStatus.classList.add('bg-red-500/20', 'text-red-400');
+            if(color === 'emerald') tableStatus.classList.add('bg-emerald-500/20', 'text-emerald-400');
+            if(color === 'amber') tableStatus.classList.add('bg-amber-500/20', 'text-amber-400');
+            if(color === 'stone') tableStatus.classList.add('bg-stone-500/20', 'text-stone-400');
+
+            sidebar.classList.remove('translate-x-full');
+        }
+
+        function closeSidebar() {
+            document.getElementById('detailSidebar').classList.add('translate-x-full');
+        }
+
+        // Initialize with first table selected for demo purposes
+        window.onload = () => {
+            setTimeout(() => {
+                selectTable('T-01', 'Đang dùng', '04', '18:30', '2,450,000đ', 'red');
+            }, 500);
+        }
+    </script>
+</body></html>

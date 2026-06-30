@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ember Bistro - Quản lý Cao cấp</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #121414;
+            color: #e2e2e2;
+            overflow-x: hidden;
+        }
+        /* Custom Tonal Layering */
+        .glass-panel {
+            background: rgba(26, 20, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid #2a1e17;
+        }
+        .sidebar-active {
+            background-color: #2a1e17;
+            border-left: 4px solid #ffc880;
+        }
+        /* Hide scrollbars */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .glow-amber {
+            box-shadow: 0 0 15px rgba(255, 200, 128, 0.2);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#835500",
+                        "on-primary": "#452b00",
+                        "secondary": "#d8c2b7",
+                        "surface-bright": "#37393a",
+                        "tertiary-container": "#bfb4b0",
+                        "outline-variant": "#524534",
+                        "on-tertiary": "#362f2d",
+                        "secondary-container": "#53443b",
+                        "primary": "#ffc880",
+                        "surface-container-highest": "#333535",
+                        "primary-fixed": "#ffddb4",
+                        "on-primary-fixed-variant": "#633f00",
+                        "primary-fixed-dim": "#ffb955",
+                        "inverse-on-surface": "#2f3131",
+                        "on-background": "#e2e2e2",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-container": "#1e2020",
+                        "surface-container-lowest": "#0c0f0f",
+                        "on-error": "#690005",
+                        "surface": "#121414",
+                        "surface-dim": "#121414",
+                        "on-secondary-fixed-variant": "#53443b",
+                        "surface-tint": "#ffb955",
+                        "on-tertiary-container": "#4d4643",
+                        "on-secondary": "#3b2e26",
+                        "on-surface": "#e2e2e2",
+                        "secondary-fixed-dim": "#d8c2b7",
+                        "on-tertiary-fixed": "#201a18",
+                        "outline": "#9f8e7a",
+                        "on-surface-variant": "#d7c3ae",
+                        "on-primary-fixed": "#291800",
+                        "tertiary-fixed-dim": "#cfc4c0",
+                        "tertiary": "#dbcfcc",
+                        "surface-variant": "#333535",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#251912",
+                        "primary-container": "#f5a623",
+                        "background": "#121414",
+                        "tertiary-fixed": "#ece0dc",
+                        "on-primary-container": "#644000",
+                        "inverse-surface": "#e2e2e2",
+                        "surface-container-low": "#1a1c1c",
+                        "secondary-fixed": "#f5ded3",
+                        "on-secondary-container": "#c6b1a6",
+                        "on-tertiary-fixed-variant": "#4d4542",
+                        "surface-container-high": "#282a2b"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "stack-gap": "12px",
+                        "sidebar-width": "260px",
+                        "container-padding": "24px",
+                        "unit": "8px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width border-r border-outline-variant bg-surface-container flex flex-col py-gutter z-50">
+<div class="px-6 mb-10">
+<h1 class="font-headline-lg text-[32px] font-bold text-primary tracking-tight">Ember Bistro</h1>
+<p class="text-on-surface-variant text-sm font-medium">Premium Management</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<!-- Active State Navigation -->
+<a class="bg-secondary-container text-primary border-l-4 border-primary px-4 py-3 flex items-center gap-3 transition-transform active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-title-md text-[18px] font-semibold">Dashboard</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-title-md text-[18px] font-semibold">Bàn / Sơ đồ</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="font-title-md text-[18px] font-semibold">Thực đơn</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-title-md text-[18px] font-semibold">Đơn hàng</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="font-title-md text-[18px] font-semibold">Báo cáo</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">store</span>
+<span class="font-title-md text-[18px] font-semibold">Cửa hàng</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-title-md text-[18px] font-semibold">Chi nhánh</span>
+</a>
+</nav>
+<div class="px-2 mt-auto pt-6 border-t border-outline-variant/30">
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-title-md text-[18px] font-semibold">Settings</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-title-md text-[18px] font-semibold">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-sidebar-width min-h-screen relative">
+<!-- Top Navigation Bar -->
+<header class="h-16 px-container-padding flex justify-between items-center bg-surface-container border-b border-outline-variant sticky top-0 z-40 shadow-sm">
+<div class="flex items-center gap-8 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-2 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary transition-all text-sm outline-none" placeholder="Tìm kiếm giao dịch, món ăn..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 border border-primary text-primary rounded-lg text-sm font-bold hover:bg-primary/10 transition-colors">
+                    Switch Store
+                </button>
+<div class="flex items-center gap-3 px-3 border-l border-outline-variant/30 ml-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="flex items-center gap-2 group cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional close-up portrait of a restaurant manager in a luxury bistro setting. The lighting is warm and cinematic, reflecting the premium dark and gold aesthetic of the establishment. The individual is dressed in high-end hospitality attire, projecting competence and elegance within a modern, sophisticated culinary environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEY_ZmHdakXF42mIgZq4vpyU6giIzRM4WYR-nNQVEtZIcPWPf14mbhzNrPWh4nEFmBvTIGdLiKyLDyJiew5AgJumyVlAd3ponxscSNOqFmzLDAbdkYxU56c7VZFrRhc_2iU_-lcsVSB8hReeCYILBTjs_mlXy26LICZRQdddYIRLiQiAIbT_TvYU0tjhzF14Uv0Tte31uYCt_GPZXK7adZux2OUxUxjNFVIb052iqDTtvosHUfxVTwdTdBYh70Syxcojfm-PkHqeVY"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">account_circle</span>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-container-padding space-y-8">
+<!-- Welcome Header -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="text-display-lg font-display-lg text-white mb-2">Xin chào, Quản lý</h2>
+<p class="text-on-surface-variant font-body-md">Hôm nay là ngày 24 tháng 5, 2024. Ember Bistro đang hoạt động ổn định.</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+                        Tạo Đơn Mới
+                    </button>
+</div>
+</section>
+<!-- Key Stats Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Today's Revenue -->
+<div class="glass-panel p-6 rounded-xl flex flex-col gap-4 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">payments</span>
+</div>
+<span class="text-on-surface-variant text-sm font-semibold uppercase tracking-wider">Doanh Thu Hôm Nay</span>
+<div class="flex items-baseline gap-2">
+<span class="text-[36px] font-extrabold text-primary">24.8M</span>
+<span class="text-on-surface text-sm">VND</span>
+</div>
+<div class="flex items-center gap-2 text-green-400 text-sm">
+<span class="material-symbols-outlined text-xs">trending_up</span>
+<span>+12% so với hôm qua</span>
+</div>
+</div>
+<!-- Last 7 Days -->
+<div class="glass-panel p-6 rounded-xl flex flex-col gap-4">
+<span class="text-on-surface-variant text-sm font-semibold uppercase tracking-wider">7 Ngày Qua</span>
+<div class="flex items-baseline gap-2">
+<span class="text-[36px] font-extrabold text-white">162.5M</span>
+<span class="text-on-surface text-sm">VND</span>
+</div>
+<div class="flex items-center gap-2 text-primary text-sm">
+<span class="material-symbols-outlined text-xs">calendar_today</span>
+<span>Tăng trưởng ổn định</span>
+</div>
+</div>
+<!-- Avg Order Value -->
+<div class="glass-panel p-6 rounded-xl flex flex-col gap-4">
+<span class="text-on-surface-variant text-sm font-semibold uppercase tracking-wider">Gía Trị TB Đơn Hàng</span>
+<div class="flex items-baseline gap-2">
+<span class="text-[36px] font-extrabold text-white">850K</span>
+<span class="text-on-surface text-sm">VND</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm">
+<span class="material-symbols-outlined text-xs">shopping_bag</span>
+<span>42 đơn hàng đã hoàn tất</span>
+</div>
+</div>
+</section>
+<!-- Main Dashboard Area (Bento Style) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Revenue Trend Chart -->
+<section class="lg:col-span-8 glass-panel p-6 rounded-xl flex flex-col gap-6 min-h-[400px]">
+<div class="flex justify-between items-center">
+<h3 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">insights</span>
+                            Xu Hướng Doanh Thu
+                        </h3>
+<select class="bg-surface-container-lowest border border-outline-variant text-sm rounded-lg py-1 px-3 outline-none focus:border-primary">
+<option>Tháng này</option>
+<option>Tuần trước</option>
+</select>
+</div>
+<div class="flex-1 w-full relative">
+<!-- Mock Chart Area -->
+<div class="absolute inset-0 flex items-end justify-between px-2 pt-8">
+<div class="w-[12%] bg-primary/20 h-[40%] rounded-t-lg border-t-2 border-primary relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">T.Hai: 18M</div>
+</div>
+<div class="w-[12%] bg-primary/20 h-[55%] rounded-t-lg border-t-2 border-primary relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">T.Ba: 22M</div>
+</div>
+<div class="w-[12%] bg-primary/40 h-[75%] rounded-t-lg border-t-2 border-primary glow-amber relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">T.Tư: 31M</div>
+</div>
+<div class="w-[12%] bg-primary/20 h-[60%] rounded-t-lg border-t-2 border-primary relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">T.Năm: 25M</div>
+</div>
+<div class="w-[12%] bg-primary/20 h-[45%] rounded-t-lg border-t-2 border-primary relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">T.Sáu: 19M</div>
+</div>
+<div class="w-[12%] bg-primary/30 h-[85%] rounded-t-lg border-t-2 border-primary relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">T.Bảy: 38M</div>
+</div>
+<div class="w-[12%] bg-primary/50 h-[95%] rounded-t-lg border-t-2 border-primary glow-amber relative group cursor-help">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] hidden group-hover:block whitespace-nowrap">CN: 42M</div>
+</div>
+</div>
+<!-- Grid lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
+<div class="w-full h-px bg-white"></div>
+<div class="w-full h-px bg-white"></div>
+<div class="w-full h-px bg-white"></div>
+<div class="w-full h-px bg-white"></div>
+</div>
+</div>
+</section>
+<!-- Quick Actions Grid -->
+<section class="lg:col-span-4 grid grid-cols-2 gap-4">
+<button class="glass-panel p-6 rounded-xl flex flex-col items-center justify-center gap-3 hover:bg-secondary-container/30 transition-all group border-b-4 border-b-transparent hover:border-b-primary">
+<span class="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">table_restaurant</span>
+<span class="font-bold text-sm">Bàn Trống</span>
+</button>
+<button class="glass-panel p-6 rounded-xl flex flex-col items-center justify-center gap-3 hover:bg-secondary-container/30 transition-all group border-b-4 border-b-transparent hover:border-b-primary">
+<span class="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">receipt_long</span>
+<span class="font-bold text-sm">Đơn Hàng</span>
+</button>
+<button class="glass-panel p-6 rounded-xl flex flex-col items-center justify-center gap-3 hover:bg-secondary-container/30 transition-all group border-b-4 border-b-transparent hover:border-b-primary">
+<span class="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">menu_book</span>
+<span class="font-bold text-sm">Thực Đơn</span>
+</button>
+<button class="glass-panel p-6 rounded-xl flex flex-col items-center justify-center gap-3 hover:bg-secondary-container/30 transition-all group border-b-4 border-b-transparent hover:border-b-primary">
+<span class="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">analytics</span>
+<span class="font-bold text-sm">Báo Cáo</span>
+</button>
+<div class="col-span-2 glass-panel p-5 rounded-xl flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">Trạng Thái Bếp</span>
+<span class="text-sm font-bold text-white">12 Đơn đang đợi</span>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-green-500/20 text-green-500 flex items-center justify-center text-[10px] font-bold">K1</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-amber-500/20 text-amber-500 flex items-center justify-center text-[10px] font-bold">K2</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-primary text-on-primary flex items-center justify-center text-[10px] font-bold">+3</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Recent Activity / Popular Items -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-gutter pb-10">
+<!-- Live Orders -->
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-bold">Đơn hàng vừa đặt</h3>
+<a class="text-primary text-xs font-bold hover:underline" href="#">Tất cả</a>
+</div>
+<div class="divide-y divide-outline-variant/30">
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary font-bold">#42</div>
+<div>
+<p class="font-bold text-sm text-white">Bàn 04 • 3 khách</p>
+<p class="text-xs text-on-surface-variant">Vừa mới đặt • 1,250,000đ</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500">Đang chuẩn bị</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary font-bold">#41</div>
+<div>
+<p class="font-bold text-sm text-white">Bàn 12 • 2 khách</p>
+<p class="text-xs text-on-surface-variant">5 phút trước • 850,000đ</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500">Đã phục vụ</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary font-bold">#40</div>
+<div>
+<p class="font-bold text-sm text-white">Bàn VIP 01 • 6 khách</p>
+<p class="text-xs text-on-surface-variant">12 phút trước • 4,500,000đ</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-500">Đã thanh toán</span>
+</div>
+</div>
+</div>
+<!-- Popular Items -->
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-bold">Món ăn bán chạy</h3>
+<span class="text-on-surface-variant text-xs">Trong tuần qua</span>
+</div>
+<div class="p-4 space-y-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center overflow-hidden flex-shrink-0" data-alt="A high-end, professionally plated gourmet beef steak dish from a luxury bistro. The steak is perfectly seared, resting on a bed of truffle-infused mashed potatoes, garnished with microgreens and a rich red wine reduction. The aesthetic is dark, moody, and sophisticated, consistent with a premium culinary environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCk_1hdm7PiSDhX-KrH_2TCi0OLTh99AHHW3V-46mSrJMHYy9GBAtu6dD4Kc6pSlr-sOf30iBZ9OE4TCpi_Hpwlhuded97HY-TUfQIiqjs0bI8SyjqGc7TLaE3dTkO-RojcHVZw0h_Z0Ozw24afzOl4dEBxXaOc5ZQikjEyul5IBCqn_twTJR4vJwKeHT03IbVIzA3sfFpz3_4gO1mtro3KRB_L9eujoBX-iKIQ5k42lNryEjcYcsrjKmgoQ1sk-FVy9tr2iJ__gXa0')"></div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<p class="text-sm font-bold text-white">Thăn Bò Wagyu Nướng</p>
+<span class="text-sm font-bold text-primary">124 lượt</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[85%]"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center overflow-hidden flex-shrink-0" data-alt="An exquisite, beautifully presented seafood pasta dish featuring scallops and prawns in a delicate saffron cream sauce. Plated in a designer ceramic bowl, the colors are vibrant yet controlled, evoking a sense of high-end luxury and artisanal culinary craftsmanship within a dark-themed restaurant atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCMkD-hHrS3Gbvr0ZfEXhsBdwC3JK7UFoos_QlJcxKzHEfBXyP1-e4OUgdTKupOWjHHZKZdhYrJscSaM9sESRsfoEPUxi-qyoRj9us8rxmMSv2U2xDUKpkoE2EBZzY5oevdncyNYk44y7X9OWir8k8l9Ut910ihL2dJAhB1wvZ2VyKeS_eSColjoYA0kYW0OeSVttLDtiJ0P_bjA_m2BaMN7PT-B2jCXQ0Uo61LxUqOZxtmvROkZ20sDtnfDDRb1-d9IU6cB4F1JM6e')"></div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<p class="text-sm font-bold text-white">Mì Ý Hải Sản Saffron</p>
+<span class="text-sm font-bold text-primary">98 lượt</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[65%]"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center overflow-hidden flex-shrink-0" data-alt="A sophisticated handcrafted dessert, perhaps a deconstructed chocolate fondant with gold leaf accents and a sphere of vanilla bean gelato. The lighting is focused and warm, highlighting the textures and luxurious ingredients. The presentation is modern and artistic, fitting for a top-tier bistro's dessert menu." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAw5PhsEs9X0P-KvyvBWdw_Y9tvqsI4JQnsbFHkwH3pMqn4As5YZ3SHRWACd_6O8xdlnzA-BsoQi5bq9YNj9n5KtSOsW3FGarJ8trR-lYDkyAxMXvV-ZDVwARsu_ANjAA6a3KVGrDplJtlXIirJCaQymAegajf9tBHwpEz-vcJbsnnY_dmj4Cc9oS9rc_kopgziGrRrFEgLyZN26cbraMVoaRY6fIUM4_BaZmRq4EPZF-nN6zBY6ss0j7PAKckZ7lSlGjyxKk-CWJZI')"></div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<p class="text-sm font-bold text-white">Fondant Chocolate 70%</p>
+<span class="text-sm font-bold text-primary">82 lượt</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[55%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer Decoration / Atmospheric Effect -->
+<div class="absolute bottom-0 right-0 w-1/3 h-1/3 bg-primary/5 blur-[120px] pointer-events-none rounded-full"></div>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simple hover effect for dashboard items
+        document.querySelectorAll('.glass-panel').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.transition = 'all 0.3s ease';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Search Bar Focus Effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.02]');
+            searchInput.parentElement.style.transition = 'all 0.3s ease';
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.02]');
+        });
+    </script>
+</body></html>

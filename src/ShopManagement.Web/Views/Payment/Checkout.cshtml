@@ -3,7 +3,13 @@
     ViewData["Title"] = "Thanh toán";
 }
 
-<h1>Thanh toán - Bàn @Model.TableName</h1>
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Thanh toán</h1>
+        <p class="page-subtitle">Bàn @Model.TableName</p>
+    </div>
+    <a asp-controller="Order" asp-action="Index" asp-route-tableId="@Model.TableId" class="btn-secondary">← Quay lại đơn hàng</a>
+</div>
 
 @if (TempData["Error"] != null)
 {
@@ -48,5 +54,4 @@
         </div>
         <button type="submit" class="btn-primary" style="width:100%;">Xác nhận thanh toán</button>
     </form>
-    <a asp-controller="Order" asp-action="Index" asp-route-tableId="@Model.TableId" class="btn-secondary" style="display:block; text-align:center; margin-top:10px;">&larr; Quay lại đơn hàng</a>
 </div>

@@ -1,0 +1,20 @@
+@model ShopManagement.Web.Models.PaymentReceiptViewModel
+@{
+    ViewData["Title"] = "Hóa đơn";
+}
+
+<div class="linear-card" style="max-width:420px; margin: 0 auto; text-align:center;">
+    <div class="badge badge-available" style="margin-bottom:14px;">Thanh toán thành công</div>
+    <h1 style="margin-bottom:4px;">@Model.Payment.Amount.ToString("N0") đ</h1>
+    <p class="text-muted" style="margin-bottom:20px;">Bàn @Model.TableName</p>
+
+    <table class="table" style="width:100%; text-align:left;">
+        <tbody>
+            <tr><td class="text-muted">Mã thanh toán</td><td style="text-align:right;">@Model.Payment.Id</td></tr>
+            <tr><td class="text-muted">Phương thức</td><td style="text-align:right;">@Model.Payment.Method</td></tr>
+            <tr><td class="text-muted">Thời gian</td><td style="text-align:right;">@Model.Payment.CreatedAt.ToLocalTime().ToString("HH:mm dd/MM/yyyy")</td></tr>
+        </tbody>
+    </table>
+
+    <a asp-controller="Table" asp-action="Index" class="btn-primary" style="display:block; text-align:center; margin-top:20px;">Về sơ đồ bàn</a>
+</div>

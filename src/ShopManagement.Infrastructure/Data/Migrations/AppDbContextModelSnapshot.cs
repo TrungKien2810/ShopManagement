@@ -196,7 +196,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Branch", b =>
@@ -229,7 +229,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("Branches");
+                    b.ToTable("Branches", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Category", b =>
@@ -273,7 +273,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Order", b =>
@@ -324,7 +324,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("TableId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.OrderItem", b =>
@@ -376,7 +376,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("[IdempotencyKey] IS NOT NULL");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Payment", b =>
@@ -420,7 +420,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Product", b =>
@@ -475,7 +475,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Shop", b =>
@@ -507,7 +507,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Shops");
+                    b.ToTable("Shops", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.ShopMember", b =>
@@ -541,7 +541,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ShopMembers");
+                    b.ToTable("ShopMembers", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.Table", b =>
@@ -595,7 +595,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("Tables");
+                    b.ToTable("Tables", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Domain.Entities.TableArea", b =>
@@ -635,7 +635,7 @@ namespace ShopManagement.Infrastructure.Data.Migrations
                     b.HasIndex("ShopId", "Name")
                         .IsUnique();
 
-                    b.ToTable("TableAreas");
+                    b.ToTable("TableAreas", (string)null);
                 });
 
             modelBuilder.Entity("ShopManagement.Infrastructure.Identity.ApplicationUser", b =>

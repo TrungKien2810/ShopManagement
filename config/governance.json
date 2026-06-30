@@ -1,0 +1,41 @@
+{
+  "scope": {
+    "mode": "allowlist",
+    "allow": [
+      "src/**",
+      "config/**",
+      "docs/**",
+      "*.md",
+      ".gitignore"
+    ],
+    "deny": [
+      "**/.env",
+      "**/.env.*",
+      "**/secrets/**"
+    ],
+    "ask": [
+      "*.sln",
+      "**/*.csproj",
+      "**/*.config.*"
+    ]
+  },
+  "verify": {
+    "lint": null,
+    "test": "dotnet test",
+    "onFail": "block",
+    "maxBlockRetries": 2,
+    "timeoutMs": 300000
+  },
+  "cost": {
+    "pricingFile": "config/pricing.json"
+  },
+  "git": {
+    "autoCommitOnPass": false
+  },
+  "recall": {
+    "maxLessons": 5,
+    "maxChars": 1200,
+    "budgetChars": 0,
+    "requireRelevance": false
+  }
+}

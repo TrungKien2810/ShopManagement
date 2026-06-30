@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Đăng nhập | Ember Bistro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Shared Component Styling Logic from JSON & Style Guidance -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#835500",
+                    "on-primary": "#452b00",
+                    "secondary": "#d8c2b7",
+                    "surface-bright": "#37393a",
+                    "tertiary-container": "#bfb4b0",
+                    "outline-variant": "#524534",
+                    "on-tertiary": "#362f2d",
+                    "secondary-container": "#53443b",
+                    "primary": "#ffc880",
+                    "surface-container-highest": "#333535",
+                    "primary-fixed": "#ffddb4",
+                    "on-primary-fixed-variant": "#633f00",
+                    "primary-fixed-dim": "#ffb955",
+                    "inverse-on-surface": "#2f3131",
+                    "on-background": "#e2e2e2",
+                    "on-error-container": "#ffdad6",
+                    "error": "#ffb4ab",
+                    "surface-container": "#1e2020",
+                    "surface-container-lowest": "#0c0f0f",
+                    "on-error": "#690005",
+                    "surface": "#121414",
+                    "surface-dim": "#121414",
+                    "on-secondary-fixed-variant": "#53443b",
+                    "surface-tint": "#ffb955",
+                    "on-tertiary-container": "#4d4643",
+                    "on-secondary": "#3b2e26",
+                    "on-surface": "#e2e2e2",
+                    "secondary-fixed-dim": "#d8c2b7",
+                    "on-tertiary-fixed": "#201a18",
+                    "outline": "#9f8e7a",
+                    "on-surface-variant": "#d7c3ae",
+                    "on-primary-fixed": "#291800",
+                    "tertiary-fixed-dim": "#cfc4c0",
+                    "tertiary": "#dbcfcc",
+                    "surface-variant": "#333535",
+                    "error-container": "#93000a",
+                    "on-secondary-fixed": "#251912",
+                    "primary-container": "#f5a623",
+                    "background": "#121414",
+                    "tertiary-fixed": "#ece0dc",
+                    "on-primary-container": "#644000",
+                    "inverse-surface": "#e2e2e2",
+                    "surface-container-low": "#1a1c1c",
+                    "secondary-fixed": "#f5ded3",
+                    "on-secondary-container": "#c6b1a6",
+                    "on-tertiary-fixed-variant": "#4d4542",
+                    "surface-container-high": "#282a2b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "stack-gap": "12px",
+                    "sidebar-width": "260px",
+                    "container-padding": "24px",
+                    "unit": "8px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Manrope"],
+                    "title-md": ["Manrope"],
+                    "body-md": ["Manrope"],
+                    "display-lg": ["Manrope"],
+                    "headline-lg": ["Manrope"],
+                    "headline-lg-mobile": ["Manrope"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "title-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0D0908;
+            color: #e2e2e2;
+            overflow-x: hidden;
+        }
+        .bistro-card {
+            background-color: #1A1412;
+            border: 1px solid #2A1E17;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .input-focus-effect:focus {
+            box-shadow: 0 0 10px rgba(255, 200, 128, 0.2);
+        }
+        .glow-btn {
+            box-shadow: 0 0 20px rgba(255, 200, 128, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glow-btn:hover {
+            box-shadow: 0 0 30px rgba(255, 200, 128, 0.25);
+            transform: translateY(-1px);
+        }
+        .glow-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md flex min-h-screen items-center justify-center p-gutter">
+<!-- Atmospheric Shader Background -->
+
+<main class="relative z-10 w-full max-auto max-w-[440px]">
+<!-- Brand Header Section -->
+<div class="mb-10 text-center">
+<!-- Center the bistro logo -->
+<div class="inline-flex items-center justify-center w-24 h-24 mb-6 rounded-full bistro-card shadow-lg relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary opacity-5 group-hover:opacity-10 transition-opacity"></div>
+<span class="material-symbols-outlined text-primary text-[48px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight mb-2">Ember Bistro</h1>
+<p class="font-body-md text-on-surface-variant">Chào mừng bạn quay trở lại không gian ẩm thực tinh tế</p>
+</div>
+<!-- Login Container -->
+<section class="bistro-card rounded-xl p-8 shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+<form class="space-y-6" id="loginForm">
+<!-- Username / Phone -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-widest" for="identity">Email hoặc Số điện thoại</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] group-focus-within:text-primary transition-colors">account_circle</span>
+</div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-3 pl-12 pr-4 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-primary input-focus-effect transition-all" id="identity" name="identity" placeholder="manager@emberbistro.vn" required="" type="text"/>
+</div>
+</div>
+<!-- Password -->
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-widest" for="password">Mật khẩu</label>
+<a class="text-primary hover:underline font-label-sm text-label-sm transition-all" href="#">Quên mật khẩu?</a>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] group-focus-within:text-primary transition-colors">lock</span>
+</div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-3 pl-12 pr-12 text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-primary input-focus-effect transition-all" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-4 flex items-center text-on-surface-variant hover:text-primary transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined text-[20px]" id="passwordIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center">
+<label class="relative flex items-center cursor-pointer group">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-5 h-5 border-2 border-outline-variant rounded bg-surface-container-lowest peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[16px] hidden peer-checked:block" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<span class="ml-3 font-body-md text-on-surface-variant select-none group-hover:text-on-surface transition-colors">Ghi nhớ đăng nhập</span>
+</label>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary hover:bg-primary-fixed-dim text-on-primary font-title-md text-title-md py-4 rounded-lg flex items-center justify-center gap-3 glow-btn" type="submit">
+                    Đăng nhập
+                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'wght' 700;">arrow_forward</span>
+</button>
+</form>
+<!-- Registration Prompt -->
+<div class="mt-8 pt-8 border-t border-outline-variant/30 text-center">
+<p class="font-body-md text-on-surface-variant mb-4">Bạn chưa có tài khoản tại Ember Bistro?</p>
+<button class="px-6 py-2 border border-primary text-primary hover:bg-primary/10 rounded-full font-title-md text-title-md transition-all active:scale-95">
+                    Đăng ký tài khoản mới
+                </button>
+</div>
+</section>
+<!-- Footer Links -->
+<footer class="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-4 font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<a class="hover:text-primary transition-colors" href="#">Điều khoản dịch vụ</a>
+<a class="hover:text-primary transition-colors" href="#">Chính sách bảo mật</a>
+<a class="hover:text-primary transition-colors" href="#">Hỗ trợ kỹ thuật</a>
+</footer>
+</main>
+<!-- Side Graphic for Visual Balance (Hidden on Mobile) -->
+<div class="fixed right-10 bottom-10 hidden lg:block opacity-20 hover:opacity-50 transition-opacity">
+<div class="flex flex-col items-end gap-2">
+<div class="w-32 h-1 bg-primary"></div>
+<div class="w-16 h-1 bg-primary/50"></div>
+<span class="font-display-lg text-primary mt-4 select-none" style="writing-mode: vertical-rl;">EXPERIENCE</span>
+</div>
+</div>
+<script>
+        // Password visibility toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('passwordIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.innerText = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.innerText = 'visibility';
+            }
+        }
+
+        // Simple form interaction simulation
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>`;
+            
+            setTimeout(() => {
+                btn.innerHTML = `<span class="material-symbols-outlined text-[24px]">check_circle</span>`;
+                btn.classList.add('bg-green-500');
+                setTimeout(() => {
+                    alert('Đăng nhập thành công! Chào mừng trở lại Ember Bistro.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('bg-green-500');
+                }, 1000);
+            }, 2000);
+        });
+
+        // Atmospheric parallax effect
+        document.addEventListener('mousemove', (e) => {
+            const cards = document.querySelectorAll('.bistro-card');
+            const x = (window.innerWidth / 2 - e.pageX) / 50;
+            const y = (window.innerHeight / 2 - e.pageY) / 50;
+            
+            cards.forEach(card => {
+                card.style.transform = `translateX(${x}px) translateY(${y}px)`;
+            });
+        });
+    </script>
+</body></html>

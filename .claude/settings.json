@@ -1,0 +1,25 @@
+﻿{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/claude-code/userpromptsubmit.js\"", "timeout": 30 }] }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [{ "type": "command", "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/claude-code/pretooluse.js\"", "statusMessage": "Guard checking...", "timeout": 30 }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/claude-code/posttooluse.js\"", "timeout": 15 }]
+      }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/claude-code/stop.js\"", "statusMessage": "Verifying...", "timeout": 600 }] }
+    ],
+    "SessionEnd": [
+      { "hooks": [{ "type": "command", "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/claude-code/session.js\"", "timeout": 30 }] }
+    ]
+  }
+}

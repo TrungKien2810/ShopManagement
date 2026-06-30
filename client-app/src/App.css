@@ -1,7 +1,0 @@
-/* Overridden to prevent conflicts with Tailwind & Linear layout */
-#root {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}

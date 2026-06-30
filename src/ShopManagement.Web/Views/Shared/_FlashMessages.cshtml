@@ -1,0 +1,29 @@
+@{
+    var success = TempData["Success"] as string;
+    var error = TempData["Error"] as string;
+    var warning = TempData["Warning"] as string;
+}
+@if (!string.IsNullOrEmpty(success))
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.showToast) window.showToast(@Html.Raw(Json.Serialize(success)), "success");
+        });
+    </script>
+}
+@if (!string.IsNullOrEmpty(error))
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.showToast) window.showToast(@Html.Raw(Json.Serialize(error)), "error");
+        });
+    </script>
+}
+@if (!string.IsNullOrEmpty(warning))
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.showToast) window.showToast(@Html.Raw(Json.Serialize(warning)), "warning");
+        });
+    </script>
+}

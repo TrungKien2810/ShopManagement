@@ -1,0 +1,14 @@
+@model ShopManagement.Web.Models.CurrentTenantViewModel
+
+@if (!string.IsNullOrEmpty(Model.ShopName))
+{
+    <div class="app-context">
+        <span class="label">Quán</span>
+        <span class="value">@Model.ShopName</span>
+        @if (!string.IsNullOrEmpty(Model.BranchName))
+        {
+            <span class="label" style="margin-top:8px; display:block;">Chi nhánh</span>
+            <span class="value">@Model.BranchName</span>
+        }
+    </div>
+}

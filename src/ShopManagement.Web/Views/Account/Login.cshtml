@@ -1,0 +1,124 @@
+@model ShopManagement.Web.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div style="min-height: 100vh; display: flex; background: #ffffff;">
+    
+    <!-- Left Screen: Image & Brand Info (Hidden on mobile) -->
+    <div style="flex: 1; position: relative; background: #0a0807; display: flex; align-items: center; padding: 60px;" class="d-none d-md-flex">
+        <!-- Background Image with Overlay -->
+        <div style="position: absolute; inset: 0; background: url('/images/login_bg.jpg') no-repeat center center; background-size: cover; z-index: 1;"></div>
+        <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 8, 7, 0.4) 0%, rgba(10, 8, 7, 0.85) 100%); z-index: 2;"></div>
+        
+        <!-- Content -->
+        <div style="position: relative; z-index: 3; max-width: 500px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin-bottom: 28px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                <span class="material-symbols-outlined" style="color: #ffffff; font-size: 32px; font-variation-settings: 'FILL' 1;">sports_bar</span>
+            </div>
+            <h2 style="font-family: var(--font-display); font-size: 42px; font-weight: 900; color: #ffffff; line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.02em;">ZôOS Premium Pub Management.</h2>
+            <p style="color: rgba(255, 255, 255, 0.7); font-size: 16px; line-height: 1.6; font-weight: 500;">Hệ thống tối ưu hóa vận hành, quản lý bàn ăn, thực đơn và doanh thu thời gian thực dành riêng cho nhà hàng, quán nhậu và bia club cao cấp.</p>
+        </div>
+        
+        <!-- Bottom branding tag -->
+        <div style="position: absolute; bottom: 40px; left: 60px; z-index: 3; color: rgba(255, 255, 255, 0.4); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">
+            © @DateTime.Now.Year ZôOS Software Inc.
+        </div>
+    </div>
+
+    <!-- Right Screen: Glassmorphism Login Form -->
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background: var(--color-bg-surface); position: relative;">
+        <!-- Small background light glow -->
+        <div style="position: absolute; top: 10%; right: 10%; width: 250px; height: 250px; background: rgba(230, 58, 0, 0.04); filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
+        
+        <main style="width: 100%; max-width: 420px; z-index: 10;">
+            <!-- Brand Mobile Header (Visible only on mobile) -->
+            <div style="text-align: center; margin-bottom: 32px;" class="d-md-none">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; margin-bottom: 16px; border-radius: 12px; background: var(--color-ember); color: #fff;">
+                    <span class="material-symbols-outlined" style="font-size: 28px; font-variation-settings: 'FILL' 1;">sports_bar</span>
+                </div>
+                <h1 style="font-family: var(--font-display); font-size: 28px; font-weight: 900; color: var(--color-ember); margin: 0;">ZôOS</h1>
+            </div>
+
+            <!-- Login Form Card -->
+            <div style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(229, 231, 235, 0.7); border-radius: 20px; padding: 40px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 16px -6px rgba(0, 0, 0, 0.03);">
+                <div style="margin-bottom: 28px;">
+                    <h3 style="font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--color-warm-white); margin-bottom: 6px;">Đăng nhập hệ thống</h3>
+                    <p style="color: var(--color-warm-gray); font-size: 14px; font-weight: 500;">Vui lòng nhập tài khoản để vào trang quản trị.</p>
+                </div>
+
+                <form asp-action="Login" method="post" id="loginForm" style="display: flex; flex-direction: column; gap: 20px;">
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger" style="margin: 0; padding: 10px; border-radius: 8px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15);"></div>
+
+                    <!-- Username / Email -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label asp-for="Username" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-warm-gray); font-weight: 800;">Tên đăng nhập hoặc Email</label>
+                        <div style="position: relative;">
+                            <span class="material-symbols-outlined" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--color-warm-gray); font-size: 20px;">person</span>
+                            <input asp-for="Username" class="form-control" style="padding-left: 44px; min-height: 48px; border-radius: 10px; border-color: #d1d5db;" placeholder="admin@zoos.vn" autofocus />
+                        </div>
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label asp-for="Password" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-warm-gray); font-weight: 800;">Mật khẩu</label>
+                            <a href="#" style="color: var(--color-ember); font-size: 12px; font-weight: 700; text-decoration: none;">Quên?</a>
+                        </div>
+                        <div style="position: relative;">
+                            <span class="material-symbols-outlined" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--color-warm-gray); font-size: 20px;">lock</span>
+                            <input asp-for="Password" type="password" id="passwordInput" class="form-control" style="padding-left: 44px; padding-right: 44px; min-height: 48px; border-radius: 10px; border-color: #d1d5db;" placeholder="••••••••" />
+                            <button type="button" onclick="togglePassword()" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-warm-gray); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+                                <span class="material-symbols-outlined" id="passwordIcon" style="font-size: 20px;">visibility</span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div style="display: flex; align-items: center; margin-top: 2px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; gap: 8px; font-size: 13px; color: var(--color-warm-gray); font-weight: 600; user-select: none;">
+                            <input asp-for="RememberMe" type="checkbox" style="width: 16px; height: 16px; border-radius: 4px; accent-color: var(--color-ember); cursor: pointer;" />
+                            <span>Duy trì đăng nhập trên thiết bị này</span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button with hover effect -->
+                    <button type="submit" class="btn-primary" style="width: 100%; min-height: 48px; border-radius: 10px; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; transition: all 0.25s ease;"
+                            onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+                        <span>Đăng nhập ngay</span>
+                        <span class="material-symbols-outlined" style="font-size: 18px; font-weight: bold;">login</span>
+                    </button>
+                </form>
+
+                <!-- Footer Switch screen link -->
+                <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
+                    <p style="color: var(--color-warm-gray); font-size: 13px; font-weight: 600; margin-bottom: 12px;">Bạn là khách hàng mới?</p>
+                    <a asp-action="Register" class="btn-secondary" style="border-radius: 10px; padding: 8px 20px; border: 1px solid var(--color-ember); color: var(--color-ember); font-size: 13px; font-weight: 700; text-decoration: none; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; background: none; transition: all 0.2s;">
+                        Đăng ký tài khoản cửa hàng mới
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordIcon = document.getElementById('passwordIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordIcon.innerText = 'visibility_off';
+        } else {
+            passwordInput.type = 'password';
+            passwordIcon.innerText = 'visibility';
+        }
+    }
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

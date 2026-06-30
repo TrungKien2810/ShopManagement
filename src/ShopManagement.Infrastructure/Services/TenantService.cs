@@ -17,13 +17,13 @@ public class TenantService : ITenantService
     {
         var context = _httpContextAccessor.HttpContext;
         var tenantIdClaim = context?.User?.FindFirst("ShopId")?.Value;
-        
+
         if (Guid.TryParse(tenantIdClaim, out var tenantId))
         {
             return tenantId;
         }
 
-        // Fallback to HTTP Headers (Frontend passes ShopId in intercepted request)
+        // Fallback to HTTP Headers (legacy SPA clients that intercept requests)
         if (context != null && context.Request.Headers.TryGetValue("ShopId", out var headerShopId))
         {
              if (Guid.TryParse(headerShopId.ToString(), out var headerTenantId))
@@ -32,13 +32,20 @@ public class TenantService : ITenantService
              }
         }
 
+        // Fallback to Session (MVC cookie-auth flow: shop chosen via ShopController.Select)
+        var sessionShopId = context?.Session?.GetString("ShopId");
+        if (Guid.TryParse(sessionShopId, out var sessionTenantId))
+        {
+            return sessionTenantId;
+        }
+
         return null;
     }
 
     public Guid? GetBranchId()
     {
         var context = _httpContextAccessor.HttpContext;
-        
+
         // Try getting from headers
         if (context != null && context.Request.Headers.TryGetValue("BranchId", out var headerBranchId))
         {
@@ -46,6 +53,13 @@ public class TenantService : ITenantService
             {
                 return parsedBranchId;
             }
+        }
+
+        // Fallback to Session (MVC cookie-auth flow: branch chosen via BranchController.Select)
+        var sessionBranchId = context?.Session?.GetString("BranchId");
+        if (Guid.TryParse(sessionBranchId, out var parsedSessionBranchId))
+        {
+            return parsedSessionBranchId;
         }
 
         return null;
