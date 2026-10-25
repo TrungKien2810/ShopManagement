@@ -191,7 +191,7 @@ else
                     <span class="material-symbols-outlined" style="color:var(--color-amber);">bar_chart</span>
                     <span>Diễn biến doanh thu 7 ngày qua</span>
                 </h4>
-                @if (series.Any())
+                @if (series.Any() && series.Sum(s => s.Revenue) > 0)
                 {
                     var maxRev = series.Max(s => s.Revenue);
                     if (maxRev == 0) maxRev = 1;
@@ -225,7 +225,35 @@ else
                 }
                 else
                 {
-                    <p class="text-muted" style="text-align: center; margin: 20px 0;">Không có dữ liệu chuỗi ngày.</p>
+                    <div style="display: flex; gap: 16px; align-items: flex-end; height: 180px; padding: 12px 0 28px; position: relative;">
+                        <!-- Grid lines background -->
+                        <div style="position: absolute; left: 0; right: 0; top: 12px; border-top: 1.5px dashed var(--border-subtle); pointer-events: none;"></div>
+                        <div style="position: absolute; left: 0; right: 0; top: 68px; border-top: 1.5px dashed var(--border-subtle); pointer-events: none;"></div>
+                        <div style="position: absolute; left: 0; right: 0; top: 124px; border-top: 1.5px dashed var(--border-subtle); pointer-events: none;"></div>
+                        
+                        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; z-index: 5;">
+                            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-warm-gray); opacity: 0.5;">analytics</span>
+                            <span style="font-size: 13px; color: var(--color-warm-gray); font-weight: 500;">Chưa có dữ liệu doanh thu phát sinh trong 7 ngày qua</span>
+                        </div>
+
+                        @if (series.Any())
+                        {
+                            @foreach (var day in series)
+                            {
+                                var displayDate = day.Date;
+                                if (DateTime.TryParse(day.Date, out var dt))
+                                {
+                                    displayDate = dt.ToString("dd/MM");
+                                }
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; height: 100%; z-index: 2; opacity: 0.12;">
+                                    <div style="width: 100%; height: 140px; display: flex; align-items: flex-end;">
+                                        <div style="width: 100%; height: 8px; background: var(--color-warm-gray); border-radius: 4px; width: 100%;"></div>
+                                    </div>
+                                    <span style="font-size: 11px; color: var(--color-warm-gray); white-space: nowrap; font-weight:700;">@displayDate</span>
+                                </div>
+                            }
+                        }
+                    </div>
                 }
             </div>
 

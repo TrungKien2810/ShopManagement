@@ -1,0 +1,62 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "WebSearch",
+      "Bash(Get-ChildItem -Path \"d:\\\\Edu\\\\Project\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(\\(Get-Content \"D:\\\\Edu\\\\Project\\\\ShopManagement\\\\.claude\\\\settings.local.json\" | ConvertFrom-Json\\).hooks | Select-Object -ExpandProperty UserPromptSubmit | Select-Object -ExpandProperty hooks | ForEach-Object {$_.command})",
+      "Bash(dotnet --version)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/copilot-chat/userpromptsubmit.js\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/copilot-chat/pretooluse.js\"",
+            "timeout": 30,
+            "statusMessage": "Scope guard checking..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/copilot-chat/stop.js\"",
+            "timeout": 600,
+            "statusMessage": "Verifying..."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --no-warnings \"D:/Edu/Project/OptimizedTokenProject/dist/adapters/copilot-chat/session.js\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "//": "Governance adapters auto-detect Copilot Chat vs Claude Code from payload. Set GOV env var or replace D:/Edu/Project/OptimizedTokenProject with D:/Edu/Project/OptimizedTokenProject"
+}

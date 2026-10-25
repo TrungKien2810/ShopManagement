@@ -29,7 +29,7 @@ else
         @foreach (var shop in Model)
         {
             <div class="col-lg-4 col-md-6 col-12">
-                <div class="linear-card" style="background: #ffffff; border: 1px solid @(shop.IsCurrent ? "var(--color-primary)" : "var(--border-normal)"); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: @(shop.IsCurrent ? "0 8px 30px rgba(230, 58, 0, 0.12)" : "var(--shadow-linear)"); position: relative;"
+                <div class="linear-card" style="background: var(--color-bg-surface); border: 1px solid @(shop.IsCurrent ? "var(--color-primary)" : "var(--border-normal)"); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: @(shop.IsCurrent ? "0 8px 30px rgba(230, 58, 0, 0.12)" : "var(--shadow-linear)"); position: relative;"
                      onmouseover="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 12px 30px rgba(230, 58, 0, 0.15)';"
                      onmouseout="this.style.borderColor='@(shop.IsCurrent ? "var(--color-primary)" : "var(--border-normal)")'; this.style.boxShadow='@(shop.IsCurrent ? "0 8px 30px rgba(230, 58, 0, 0.12)" : "var(--shadow-linear)")';">
 

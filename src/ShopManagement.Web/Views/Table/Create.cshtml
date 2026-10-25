@@ -39,8 +39,10 @@
             </select>
         </div>
 
-        <button type="submit" class="btn-primary">Tạo bàn</button>
-        <a asp-action="Index" class="btn-secondary">Hủy</a>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px; padding-top:16px; border-top:1px solid var(--border-normal);">
+            <a asp-action="Index" class="btn-secondary" style="padding:10px 18px; font-size:13px; border-radius:10px; min-height:unset; display:inline-flex; align-items:center; font-weight:600; text-decoration:none;">Hủy</a>
+            <button type="submit" class="btn-primary" style="padding:10px 22px; font-size:13px; border-radius:10px; min-height:unset; font-weight:700; border:none;">Tạo bàn mới</button>
+        </div>
     </form>
 </div>
 

@@ -40,12 +40,24 @@
             </select>
         </div>
 
-        <button type="submit" class="btn-primary">Lưu</button>
-        <a asp-action="Index" class="btn-secondary">Hủy</a>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--border-normal);">
+            <div>
+                <button type="button" onclick="confirmDelete()" class="btn-danger" style="padding:10px 18px; font-size:13px; border-radius:10px; font-weight:700; border:none;">Xóa bàn</button>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <a asp-action="Index" class="btn-secondary" style="padding:10px 18px; font-size:13px; border-radius:10px; min-height:unset; display:inline-flex; align-items:center; font-weight:600; text-decoration:none;">Hủy</a>
+                <button type="submit" class="btn-primary" style="padding:10px 22px; font-size:13px; border-radius:10px; min-height:unset; font-weight:700; border:none;">Lưu thay đổi</button>
+            </div>
+        </div>
     </form>
-    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline; margin-top:8px;" data-confirm="Bạn có chắc chắn muốn xóa bàn này? Hành động này không thể hoàn tác.">
-        <button type="submit" class="btn-danger" style="border-radius:12px; padding:10px 20px; font-weight:700; border:none;">Xóa bàn</button>
-    </form>
+    <form id="deleteForm" asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:none;"></form>
+    <script>
+        function confirmDelete() {
+            if (confirm("Bạn có chắc chắn muốn xóa bàn này? Hành động này không thể hoàn tác.")) {
+                document.getElementById('deleteForm').submit();
+            }
+        }
+    </script>
 </div>
 
 @section Scripts {

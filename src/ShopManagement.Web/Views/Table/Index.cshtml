@@ -157,8 +157,7 @@
             };
             
             <div class="col-md-3 col-sm-4 col-6">
-                <div class="linear-card table-card @glowClass" data-table-id="@t.Id" 
-                     style="cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; min-height:220px; position:relative; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 16px;">
+                <div class="linear-card table-card @glowClass" data-table-id="@t.Id">
                     
                     <!-- Header Card -->
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; width: 100%;">
@@ -215,14 +214,19 @@
                     </div>
 
                     <!-- Actions Panel (Overlay on hover, or compact flex) -->
-                    <div style="display:flex; gap:6px; width: 100%; border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: 4px; position:relative; z-index:2;">
+                    <div style="display:flex; gap:8px; width: 100%; border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: 4px; position:relative; z-index:2; align-items:center;">
                         @if (t.Status == TableStatus.Available)
                         {
                             <form asp-action="Open" asp-route-id="@t.Id" method="post" id="open-form-@t.Id" style="margin:0; flex:1;">
-                                <button type="submit" class="btn-primary" style="width:100%; padding:4px 8px; font-size:11px; min-height:30px; border-radius:6px; font-weight:700;" onclick="event.stopPropagation();">Mở bàn</button>
+                                <button type="submit" class="btn-primary" style="width:100%; padding:6px 12px; font-size:12px; min-height:34px; border-radius:8px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:4px;" onclick="event.stopPropagation();">
+                                    <span class="material-symbols-outlined" style="font-size:14px; font-weight:bold;">play_arrow</span>
+                                    <span>Mở bàn</span>
+                                </button>
                             </form>
                         }
-                        <a asp-action="Edit" asp-route-id="@t.Id" class="btn-secondary" style="padding:4px 8px; font-size:11px; min-height:30px; border-radius:6px; font-weight:700; text-decoration: none; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation();">Sửa</a>
+                        <a asp-action="Edit" asp-route-id="@t.Id" class="btn-secondary" style="padding:0; width:34px; height:34px; min-height:unset; border-radius:50%; display: inline-flex; align-items: center; justify-content: center; color: var(--color-warm-gray); border: 1px solid var(--border-normal); background: #fff; margin-left: auto;" onclick="event.stopPropagation();" title="Sửa bàn">
+                            <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -231,6 +235,28 @@
 }
 
 <style>
+    .table-card {
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 220px;
+        position: relative;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        padding: 16px;
+        background: #ffffff;
+        border: 1px solid var(--border-normal);
+        border-radius: 16px;
+    }
+    .table-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02) !important;
+        border-color: var(--color-ember) !important;
+    }
+    .table-card.glow-emerald:hover { border-color: var(--color-emerald) !important; }
+    .table-card.glow-ember:hover { border-color: var(--color-primary) !important; }
+    .table-card.glow-amber:hover { border-color: var(--color-amber) !important; }
+
     #detailSidebar {
         position: fixed;
         top: 0;

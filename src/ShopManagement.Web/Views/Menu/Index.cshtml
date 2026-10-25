@@ -42,23 +42,25 @@
 
 @foreach (var category in Model)
 {
-    <div style="display:flex; justify-content:space-between; align-items:center; margin: 40px 0 16px; border-bottom: 1px solid var(--border-normal); padding-bottom: 12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 40px 0 20px; background: var(--color-bg-surface); border: 1px solid var(--border-normal); padding: 12px 20px; border-radius: 12px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 22px;">folder</span>
-            <h3 style="margin:0; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--color-warm-white);">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(230, 58, 0, 0.08); display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+                <span class="material-symbols-outlined" style="font-size: 20px;">folder</span>
+            </div>
+            <h3 style="margin:0; font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--color-warm-white);">
                 @category.Name 
-                <span style="font-size:13px; font-weight:500; color: var(--color-warm-gray); margin-left: 8px; font-family: var(--font-body);">(@category.Products.Count() món ăn)</span>
+                <span style="font-size:12px; font-weight:500; color: var(--color-warm-gray); margin-left: 8px; font-family: var(--font-body);">(@category.Products.Count() món ăn)</span>
             </h3>
         </div>
         <div style="display:flex; gap:8px;">
-            <a asp-action="EditCategory" asp-route-id="@category.Id" class="btn-secondary" style="padding:6px 14px; font-size:12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+            <a asp-action="EditCategory" asp-route-id="@category.Id" class="btn-secondary" style="padding:0 12px; font-size:12px; height:32px; min-height:unset; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight:700; background:#fff;">
                 <span class="material-symbols-outlined" style="font-size: 14px;">edit</span>
-                Sửa nhóm
+                <span>Sửa nhóm</span>
             </a>
             <form asp-action="DeleteCategory" asp-route-id="@category.Id" method="post" data-confirm="Bạn có chắc chắn muốn xóa danh mục này? Tất cả các món ăn thuộc danh mục này cũng sẽ mất phân loại." style="margin: 0;">
-                <button type="submit" class="btn-secondary" style="padding:6px 14px; font-size:12px; border-radius: 6px; color:#ef4444; border-color: rgba(239,68,68,0.25); display: inline-flex; align-items: center; gap: 6px;">
+                <button type="submit" class="btn-secondary" style="padding:0 12px; font-size:12px; height:32px; min-height:unset; border-radius: 8px; color:#ef4444; border-color: rgba(239,68,68,0.25); display: inline-flex; align-items: center; gap: 6px; font-weight:700; background:#fff;">
                     <span class="material-symbols-outlined" style="font-size: 14px; color: inherit;">delete</span>
-                    Xóa nhóm
+                    <span>Xóa nhóm</span>
                 </button>
             </form>
         </div>
@@ -68,15 +70,13 @@
         @foreach (var p in category.Products)
         {
             <div class="col-xl-3 col-lg-4 col-sm-6 col-12">
-                <div class="linear-card" style="background: #ffffff; border: 1px solid var(--border-normal); border-radius: 14px; display:flex; flex-direction:column; justify-content:space-between; min-height:330px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow:hidden; padding: 0;"
-                     onmouseover="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 12px 30px rgba(230, 58, 0, 0.12)'; this.querySelector('.dish-img')?.style.setProperty('transform', 'scale(1.06)')"
-                     onmouseout="this.style.borderColor='var(--border-normal)'; this.style.boxShadow='var(--shadow-linear)'; this.querySelector('.dish-img')?.style.setProperty('transform', 'scale(1)')">
+                <div class="linear-card dish-card">
 
                     <!-- Top section with Image -->
-                    <div style="position:relative; width:100%; height:150px; overflow:hidden; background:var(--color-bg-surface); display:flex; align-items:center; justify-content:center; border-bottom: 1px solid var(--border-normal);">
+                    <div class="dish-img-container">
                         @if (!string.IsNullOrEmpty(p.ImageUrl))
                         {
-                            <img src="@p.ImageUrl" class="dish-img" style="width:100%; height:100%; object-fit:cover; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);" />
+                            <img src="@p.ImageUrl" class="dish-img" />
                         }
                         else
                         {
